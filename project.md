@@ -15,7 +15,7 @@ This project aims to create a web-based, hyperlocal “small favors network” w
 ### Must Have (MVP-critical)
 
 - Auth:
-  - Email / magic link login
+  - Email login
 
 - User:
   - Approximate home location (stored precisely, exposed coarsely)
@@ -246,7 +246,7 @@ Distance calculation via geolib
 
 ### Libraries / Tools
 
-- Auth: Clerk or Lucia
+- Auth: Convex Auth (email + password)
 - Geo: geolib
 - Validation: zod
 - State: nanostores
@@ -261,7 +261,7 @@ Distance calculation via geolib
 1. Initialize Astro project
 2. Setup Convex backend
 3. Configure deployment on Vercel
-4. Integrate auth (Clerk or Lucia)
+4. Integrate auth (Convex Auth)
 
 ### Phase 2: Core Models
 

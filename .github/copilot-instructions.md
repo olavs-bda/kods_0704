@@ -9,7 +9,7 @@ Hyperlocal "small favors network" — neighbors request/fulfill help through an 
 - **Frontend**: Astro (deployed on Vercel)
 - **Backend**: Convex (realtime subscriptions, mutations, queries)
 - **Database**: Convex (built-in)
-- **Auth**: Clerk or Lucia (magic link login)
+- **Auth**: Convex Auth (email + password)
 - **Styling**: TailwindCSS (utility-first only)
 - **Language**: TypeScript (strict mode)
 - **Libraries**: geolib (geo), zod (validation), nanostores (state), date-fns (dates)
