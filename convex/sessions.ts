@@ -23,7 +23,14 @@ export const validateOrganisation = query({
       .query("organisations")
       .withIndex("by_code", (q) => q.eq("code", args.code))
       .first();
-    return org;
+    if (!org) return null;
+    return {
+      _id: org._id,
+      code: org.code,
+      name: org.name,
+      taskIds: org.taskIds,
+      settings: org.settings,
+    };
   },
 });
 
@@ -137,7 +144,14 @@ export const getSession = query({
       return null;
     }
     return {
-      ...session,
+      _id: session._id,
+      organisationId: session.organisationId,
+      participantCode: session.participantCode,
+      currentTaskIndex: session.currentTaskIndex,
+      startedAt: session.startedAt,
+      lastActiveAt: session.lastActiveAt,
+      expiresAt: session.expiresAt,
+      submissionCount: session.submissionCount,
       expired: Date.now() > session.expiresAt,
     };
   },
