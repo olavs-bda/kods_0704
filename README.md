@@ -1,15 +1,15 @@
-# Neighbors
+# Prompt Workshop Coach
 
-Hyperlocal "small favors network" — neighbors request and fulfill help through an open feed with a dynamic trust graph.
+Workshop-scoped web app for structured prompt-writing exercises with real-time AI feedback in Latvian. No user accounts — access via Organisation Code + Participant Code.
 
 ## Tech Stack
 
 - **Frontend**: Astro 6 (deployed on Vercel)
-- **Backend**: Convex (realtime subscriptions, mutations, queries + built-in database)
-- **Auth**: Convex Auth (email + password)
+- **Backend**: Convex (queries, mutations, actions + built-in database)
+- **AI**: OpenAI API via Convex actions
 - **Styling**: TailwindCSS v4
 - **Language**: TypeScript (strict mode)
-- **Libraries**: geolib, zod, nanostores, date-fns
+- **Libraries**: zod, nanostores, date-fns
 
 ## Getting Started
 
@@ -17,6 +17,7 @@ Hyperlocal "small favors network" — neighbors request and fulfill help through
 
 - Node.js 18+
 - Convex account ([convex.dev](https://convex.dev))
+- OpenAI API key
 
 ### Setup
 
@@ -24,11 +25,11 @@ Hyperlocal "small favors network" — neighbors request and fulfill help through
 # Install dependencies
 npm install
 
-# Copy environment variables
-cp .env.example .env.local
-
 # Start Convex dev backend (first run will prompt login + project creation)
 npx convex dev
+
+# Set OpenAI API key in Convex environment
+npx convex env set OPENAI_API_KEY <your-key>
 
 # In a separate terminal, start Astro dev server
 npx astro dev
@@ -36,9 +37,10 @@ npx astro dev
 
 ### Environment Variables
 
-| Variable          | Description           |
-| ----------------- | --------------------- |
-| `PUBLIC_CONVEX_URL` | Convex deployment URL |
+| Variable            | Where        | Description           |
+| ------------------- | ------------ | --------------------- |
+| `PUBLIC_CONVEX_URL` | `.env.local` | Convex deployment URL |
+| `OPENAI_API_KEY`    | Convex env   | OpenAI API key        |
 
 ### Project Structure
 
@@ -50,13 +52,23 @@ src/
   lib/            # Shared utilities
   styles/         # Global CSS (Tailwind)
 convex/
-  schema.ts       # Database schema
-  users.ts        # User queries & mutations
-  auth.config.ts  # Convex Auth config
-  auth.ts         # Auth providers (Password)
-  http.ts         # HTTP routes for auth
+  schema.ts       # Database schema (organisations, sessions, taskSets, submissions)
 public/           # Static assets
 ```
+
+### Seed Data
+
+After starting the Convex backend, seed the database with test organisations and tasks:
+
+```bash
+npx convex run --no-push seed:seedData
+```
+
+This creates:
+
+- **2 organisations**: `BDA-2026` and `Saeima100426`
+- **1 task set**: 6 prompt engineering exercises (2 per level, levels 1–3)
+- **Settings**: 48h session expiry, 50 submissions/user
 
 ### Commands
 
@@ -66,3 +78,13 @@ npx convex dev    # Start Convex dev backend
 npm run build     # Production build
 npm run preview   # Preview production build
 ```
+
+### Architecture
+
+```
+User enters codes → Validate Org → Create/Resume Session → Get Current Task
+Submit Prompt → Check Rate Limit → OpenAI (GPT-4o-mini) → Store Feedback → Display
+Task 1 (Level 1) → Task 2 (Level 1) → ... → Task 6 (Level 3) → Done
+```
+
+All AI calls go through Convex actions — API keys never reach the client.

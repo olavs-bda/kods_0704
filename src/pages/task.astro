@@ -1,0 +1,11 @@
+---
+// src/pages/task.astro
+import Layout from "../layouts/Layout.astro";
+import TaskPage from "../components/TaskPage";
+---
+
+<Layout title="Uzdevums — Prompt Workshop Coach">
+  <main class="mx-auto max-w-2xl px-4 py-8">
+    <TaskPage client:only="react" />
+  </main>
+</Layout>

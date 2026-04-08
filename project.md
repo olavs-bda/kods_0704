@@ -1,256 +1,228 @@
-# SPEC-1-Trust Infrastructure for Neighbors
+# SPEC-1-Prompt-Workshop-Coach
 
 ## Background
 
-Urban environments are physically dense but socially fragmented, leading to underutilized local cooperation. Existing platforms optimize for engagement (social networks) or transactions (marketplaces), but fail to build persistent, structured trust between neighbors.
+Public sector organizations in Latvia are increasingly adopting LLM-based tools, but employees lack practical prompt-writing skills. Existing training approaches are either too theoretical or too generic, resulting in low retention and poor real-world applicability.
 
-As a result, people rely more on strangers with platform-mediated trust than on nearby neighbors. The missing layer is not connectivity, but a system that captures and compounds trust through repeated successful interactions.
+Workshops are the most effective training format but lack structured exercises, scalable feedback, and organization-specific customization.
 
-This project aims to create a web-based, hyperlocal “small favors network” where neighbors can request and fulfill help through an open feed. Each completed interaction contributes to a dynamic trust graph, enabling increasingly reliable and safe cooperation over time.
+Prompt Workshop Coach is a web-first, workshop-scoped application designed to provide structured prompt-writing exercises with real-time AI feedback in Latvian. The system operates without user accounts and uses short-lived session access via organization and participant codes.
+
+The system is designed to be minimal, fast, and highly focused on guided learning during live workshops.
 
 ---
 
 ## Requirements
 
-### Must Have (MVP-critical)
+### Must Have (M)
 
-- Auth:
-  - Email login
+- Code-based access (Organisation Code + Participant Code)
+- Persistent session state with soft expiry (24–72h configurable)
+- Task delivery based on organisation
+- Sequential task flow (one task at a time)
+- Prompt submission with edit/resubmit
+- AI-generated structured feedback in Latvian
+- Progressive difficulty (levels 1–3)
+- Minimal, mobile-responsive UI
+- Secure backend (no API keys exposed)
+- Graceful error handling
 
-- User:
-  - Approximate home location (stored precisely, exposed coarsely)
+### Should Have (S)
 
-- Requests:
-  - Create favor request (title, description)
-  - Open nearby feed (geo-filtered)
-  - Accept request (single helper)
-  - Mark as completed
-  - Cancel request
+- Multiple submissions per task
+- Submission history storage
+- Configurable task sets per organisation
+- Rate limiting per participant (configurable)
+- Loading states for AI responses
 
-- Trust:
-  - Simple trust score = number of completed favors
+### Could Have (C)
 
-- System tracking:
-  - requester_id, helper_id, timestamps, status
+- Session expiry tuning
+- Analytics (task completion, common issues)
+- Feedback tone variations
 
-- Feed ranking:
-  - By proximity
+### Won’t Have (W)
 
-- Privacy:
-  - Exact location hidden, rounded location exposed
-
-### Should Have (early iteration)
-
-- Chat between requester & helper
-- User profile:
-  - Completed favors count
-
-- Simple post-completion feedback (👍 / 👎)
-
-### Could Have
-
-- Trust graph traversal (friends-of-trusted)
-- Request categories
-- Soft identity verification
-
-### Won’t Have (MVP)
-
-- Payments / marketplace
-- AI matching
-- Multi-helper requests
-- Native mobile apps
-- Notifications (email/push)
+- User accounts
+- Facilitator UI
+- Public access
+- Scoring or gamification
+- Multi-language UI
 
 ---
 
 ## Method
 
-### High-Level Architecture
+### Architecture
 
-```plantuml
-@startuml
-[Astro Frontend (Vercel)] --> [Convex Backend]
-[Convex Backend] --> [Convex Database]
-@enduml
+```
+Client (Astro + Tailwind)
+        |
+        v
+Convex Backend
+  - Session management
+  - Task engine
+  - Rate limiting
+  - OpenAI integration
+        |
+        v
+OpenAI API
 ```
 
-### Core Design Principles
+### Key Design Decisions
 
-1. Realtime-first UX using Convex subscriptions
-2. Trust derived from interactions (not hardcoded)
-3. Hybrid geo privacy model
-4. Simple request lifecycle
-5. Single helper constraint for MVP
+- Session-based model instead of user accounts
+- Convex as primary backend (state + logic)
+- Astro used as UI shell with client-side interactivity
+- Stateless frontend, stateful backend
 
 ---
 
-### Request Lifecycle
+### Data Model (Convex)
 
-```plantuml
-@startuml
-[*] --> Open
-Open --> Accepted
-Accepted --> Completed
-Open --> Cancelled
-@enduml
+#### Organisations
+
 ```
-
----
-
-### Database Schema
-
-#### users
-
-```ts
-users: {
-  _id: Id<"users">
-  email: string
-  name?: string
-
-  lat: number
-  lng: number
-
-  trustScore: number
-
-  createdAt: number
+{
+  _id,
+  code,
+  name,
+  taskSetId,
+  settings: {
+    sessionExpiryHours,
+    maxSubmissionsPerUser
+  }
 }
 ```
 
-Indexes:
+#### Sessions
 
-- by_email
-
----
-
-#### requests
-
-```ts
-requests: {
-  _id: Id<"requests">
-
-  title: string
-  description: string
-
-  requesterId: Id<"users">
-  helperId?: Id<"users">
-
-  status: "open" | "accepted" | "completed" | "cancelled"
-
-  lat: number
-  lng: number
-
-  createdAt: number
-  acceptedAt?: number
-  completedAt?: number
+```
+{
+  _id,
+  organisationId,
+  participantCode,
+  currentTaskIndex,
+  startedAt,
+  lastActiveAt,
+  expiresAt,
+  submissionCount
 }
 ```
 
-Indexes:
+#### TaskSets
 
-- by_status
-- by_requester
-
----
-
-#### interactions
-
-```ts
-interactions: {
-  _id: Id<"interactions">;
-
-  requesterId: Id<"users">;
-  helperId: Id<"users">;
-
-  requestId: Id<"requests">;
-
-  outcome: "completed" | "failed";
-  createdAt: number;
+```
+{
+  _id,
+  name,
+  tasks: Task[]
 }
 ```
 
-Indexes:
+#### Task
 
-- by_requester
-- by_helper
-- by_pair
-
----
-
-#### messages
-
-```ts
-messages: {
-  _id: Id<"messages">;
-
-  requestId: Id<"requests">;
-
-  senderId: Id<"users">;
-  body: string;
-
-  createdAt: number;
+```
+{
+  id,
+  title_lv,
+  instruction_lv,
+  context_lv,
+  expectedOutput,
+  level,
+  assistance: {
+    hints_lv,
+    example_lv
+  }
 }
 ```
 
-Indexes:
+#### Submissions
 
-- by_request
-
----
-
-### Core Algorithms
-
-#### Create Request
-
-- Insert request with status = open
-
-#### Accept Request (Race-safe)
-
-- Ensure status is open
-- Assign helper
-- Transition to accepted
-
-#### Complete Request
-
-- Validate participants
-- Update status to completed
-- Insert interaction record
-- Increment helper trust score
+```
+{
+  _id,
+  sessionId,
+  taskId,
+  prompt,
+  createdAt,
+  feedback: {
+    strengths_lv,
+    weaknesses_lv,
+    improvedPrompt_lv,
+    explanation_lv,
+    nextStep_lv
+  }
+}
+```
 
 ---
 
-### Feed Query
+### Core Flows
 
-1. Bounding box filter (~1km radius)
-2. Filter status = open
-3. Exclude own requests
-4. Sort by distance ascending
+#### Access Flow
 
-Distance calculation via geolib
+1. User enters codes
+2. Backend validates organisation
+3. Create or fetch session
+4. Check expiry
+5. Return current task
+
+#### Submission Flow
+
+1. User submits prompt
+2. Validate limits
+3. Send to OpenAI
+4. Store feedback
+5. Return response
+
+#### Progression
+
+- Manual "Next" button
+- Increment `currentTaskIndex`
 
 ---
 
-### Chat
+### OpenAI Integration
 
-- Scoped to requestId
-- Only requester + helper allowed
-- Realtime via Convex subscriptions
+#### Prompt Template (EN)
+
+```
+You are an expert prompt engineering coach.
+
+User prompt:
+"{user_input}"
+
+Context:
+- Audience: Latvian public sector employee
+- Task type: {task.expectedOutput}
+- Assistance level: {level}
+
+Return JSON:
+{
+  "strengths_lv": "...",
+  "weaknesses_lv": "...",
+  "improvedPrompt_lv": "...",
+  "explanation_lv": "...",
+  "nextStep_lv": "..."
+}
+```
 
 ---
 
-### Privacy Model
+### Rate Limiting
 
-- Store exact lat/lng
-- Expose rounded coordinates (~100m precision)
+```
+if submissionCount >= maxSubmissionsPerUser → reject
+```
 
 ---
 
-### Libraries / Tools
+### Expiry Logic
 
-- Auth: Convex Auth (email + password)
-- Geo: geolib
-- Validation: zod
-- State: nanostores
-- Date handling: date-fns
+```
+if now > expiresAt → session invalid
+```
 
 ---
 
@@ -258,68 +230,53 @@ Distance calculation via geolib
 
 ### Phase 1: Setup
 
-1. Initialize Astro project
-2. Setup Convex backend
-3. Configure deployment on Vercel
-4. Integrate auth (Convex Auth)
+- Initialize Astro project
+- Setup Tailwind
+- Setup Convex project
+- Configure environment variables
 
-### Phase 2: Core Models
+### Phase 2: Backend Core
 
-1. Define Convex schemas
-2. Implement users, requests, interactions tables
-3. Add indexes
+- Define Convex schema
+- Implement session creation/validation
+- Implement task retrieval
+- Implement submission + storage
 
-### Phase 3: Core Features
+### Phase 3: OpenAI Integration
 
-1. Create request flow
-2. Feed query with geo filtering
-3. Accept request mutation
-4. Complete request mutation
-5. Cancel request mutation
+- Implement API wrapper in Convex
+- Add structured prompt + parsing
+- Add error handling
 
-### Phase 4: Trust System
+### Phase 4: Frontend
 
-1. Interaction logging
-2. Trust score increment logic
+- Code entry screen
+- Task screen
+- Prompt input component
+- Feedback display
+- Loading + error states
 
-### Phase 5: Chat (Should)
+### Phase 5: Progression & Limits
 
-1. Messages table
-2. Realtime chat UI
+- Next task logic
+- Rate limiting
+- Session expiry handling
 
-### Phase 6: Privacy Layer
+### Phase 6: Polish
 
-1. Coordinate rounding before client exposure
-
-### Phase 7: UI
-
-1. Feed page
-2. Request creation form
-3. Request detail page
-4. Chat interface
+- Mobile optimization
+- UX simplification
+- Edge case handling
 
 ---
 
 ## Milestones
 
-### Week 1
-
-- Project setup
-- Auth + user creation
-
-### Week 2
-
-- Request creation + feed
-
-### Week 3
-
-- Accept + complete flow
-- Trust score
-
-### Week 4
-
-- Chat system
-- UI polish
+1. MVP Backend Ready
+2. Basic UI Functional
+3. End-to-End Flow Working
+4. AI Feedback Integrated
+5. Workshop Pilot Ready
 
 ---
 
@@ -327,13 +284,18 @@ Distance calculation via geolib
 
 ### Metrics
 
-- Requests created per user
-- Completion rate
-- Average response time
-- Repeat interactions between same users
+- Task completion rate
+- Average submissions per task
+- Drop-off points
+
+### Evaluation
+
+- Workshop facilitator feedback
+- Participant usability feedback
+- Quality of prompts before vs after
 
 ### Success Criteria
 
-- High completion rate (>60%)
-- Users perform multiple favors
-- Dense local interaction clusters emerge
+- Users complete majority of tasks
+- Feedback is understandable and useful
+- System performs reliably during workshop load

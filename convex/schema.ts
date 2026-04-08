@@ -1,56 +1,55 @@
 // convex/schema.ts
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
-import { authTables } from "@convex-dev/auth/server";
 
 export default defineSchema({
-  ...authTables,
+  organisations: defineTable({
+    code: v.string(),
+    name: v.string(),
+    taskIds: v.array(v.id("tasks")),
+    settings: v.object({
+      sessionExpiryHours: v.number(),
+      maxSubmissionsPerUser: v.number(),
+    }),
+  }).index("by_code", ["code"]),
 
-  users: defineTable({
-    email: v.string(),
-    name: v.optional(v.string()),
-    lat: v.number(),
-    lng: v.number(),
-    trustScore: v.number(),
+  sessions: defineTable({
+    organisationId: v.id("organisations"),
+    participantCode: v.string(),
+    currentTaskIndex: v.number(),
+    startedAt: v.number(),
+    lastActiveAt: v.number(),
+    expiresAt: v.number(),
+    submissionCount: v.number(),
+  }).index("by_organisationId_and_participantCode", [
+    "organisationId",
+    "participantCode",
+  ]),
+
+  tasks: defineTable({
+    slug: v.string(),
+    title_lv: v.string(),
+    instruction_lv: v.string(),
+    context_lv: v.string(),
+    expectedOutput: v.string(),
+    level: v.number(),
+    hints_lv: v.optional(v.string()),
+    example_lv: v.optional(v.string()),
+  }).index("by_slug", ["slug"]),
+
+  submissions: defineTable({
+    sessionId: v.id("sessions"),
+    taskId: v.id("tasks"),
+    prompt: v.string(),
     createdAt: v.number(),
-  }).index("by_email", ["email"]),
-
-  requests: defineTable({
-    title: v.string(),
-    description: v.string(),
-    requesterId: v.id("users"),
-    helperId: v.optional(v.id("users")),
-    status: v.union(
-      v.literal("open"),
-      v.literal("accepted"),
-      v.literal("completed"),
-      v.literal("cancelled"),
+    feedback: v.optional(
+      v.object({
+        strengths_lv: v.string(),
+        weaknesses_lv: v.string(),
+        improvedPrompt_lv: v.string(),
+        explanation_lv: v.string(),
+        nextStep_lv: v.string(),
+      }),
     ),
-    lat: v.number(),
-    lng: v.number(),
-    createdAt: v.number(),
-    acceptedAt: v.optional(v.number()),
-    completedAt: v.optional(v.number()),
-  })
-    .index("by_status", ["status"])
-    .index("by_requesterId", ["requesterId"])
-    .index("by_status_and_requesterId", ["status", "requesterId"]),
-
-  interactions: defineTable({
-    requesterId: v.id("users"),
-    helperId: v.id("users"),
-    requestId: v.id("requests"),
-    outcome: v.union(v.literal("completed"), v.literal("failed")),
-    createdAt: v.number(),
-  })
-    .index("by_requesterId", ["requesterId"])
-    .index("by_helperId", ["helperId"])
-    .index("by_requesterId_and_helperId", ["requesterId", "helperId"]),
-
-  messages: defineTable({
-    requestId: v.id("requests"),
-    senderId: v.id("users"),
-    body: v.string(),
-    createdAt: v.number(),
-  }).index("by_requestId", ["requestId"]),
+  }).index("by_sessionId", ["sessionId"]),
 });

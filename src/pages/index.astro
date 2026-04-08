@@ -1,11 +1,20 @@
 ---
 // src/pages/index.astro
 import Layout from "../layouts/Layout.astro";
+import LoginPage from "../components/LoginPage";
 ---
 
-<Layout title="Neighbors">
-  <main class="mx-auto max-w-2xl px-4 py-12">
-    <h1 class="text-3xl font-bold">Neighbors</h1>
-    <p class="mt-2 text-gray-600">Hyperlocal small favors network</p>
+<Layout title="Prompt Workshop Coach">
+  <main class="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center px-4 py-12">
+    <div class="w-full space-y-6">
+      <div class="text-center">
+        <h1 class="text-2xl font-bold text-gray-900">Prompt Workshop Coach</h1>
+        <p class="mt-2 text-sm text-gray-500">
+          Ievadiet savus kodus, lai sāktu darbnīcu
+        </p>
+      </div>
+
+      <LoginPage client:only="react" />
+    </div>
   </main>
 </Layout>

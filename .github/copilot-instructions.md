@@ -2,24 +2,26 @@
 
 ## Overview
 
-Hyperlocal "small favors network" — neighbors request/fulfill help through an open feed with a dynamic trust graph. See [project.md](../project.md) for the full spec (schema, lifecycle, algorithms, phases).
+Prompt Workshop Coach — a workshop-scoped web app for structured prompt-writing exercises with real-time AI feedback in Latvian. No user accounts; access via Organisation Code + Participant Code. See [project.md](../project.md) for the full spec.
 
 ## Tech Stack
 
 - **Frontend**: Astro (deployed on Vercel)
-- **Backend**: Convex (realtime subscriptions, mutations, queries)
+- **Backend**: Convex (queries, mutations, actions + built-in database)
 - **Database**: Convex (built-in)
-- **Auth**: Convex Auth (email + password)
+- **AI**: OpenAI API via Convex actions
 - **Styling**: TailwindCSS (utility-first only)
 - **Language**: TypeScript (strict mode)
-- **Libraries**: geolib (geo), zod (validation), nanostores (state), date-fns (dates)
+- **Libraries**: zod (validation), nanostores (state), date-fns (dates)
 
 ## Architecture
 
-- Realtime-first UX via Convex subscriptions — prefer reactive queries over polling
-- Request lifecycle: `open → accepted → completed` or `open → cancelled`
-- Single helper per request (MVP constraint)
-- Privacy: store exact lat/lng, expose rounded (~100m) to clients
+- Session-based model (no user accounts) — Organisation Code + Participant Code
+- Convex as primary backend (state + logic + OpenAI integration)
+- Astro as UI shell with client-side interactivity (React islands)
+- Sequential task flow: one task at a time, manual progression
+- AI-generated structured feedback in Latvian via OpenAI
+- Configurable session expiry (24–72h per organisation)
 
 ## Code Style
 
@@ -65,7 +67,8 @@ Hyperlocal "small favors network" — neighbors request/fulfill help through an 
 
 - Convex schema defined in `convex/schema.ts` using `defineSchema` / `defineTable`
 - Validate all mutation inputs with Convex validators (`v.*`)
-- Geo filtering: bounding box first, then distance sort via geolib
+- All user-facing feedback text in Latvian
+- OpenAI calls via Convex actions (never expose API keys to client)
 
 ## Build & Test
 

@@ -1,5 +1,5 @@
 {
-  "name": "neighbors",
+  "name": "prompt-workshop-coach",
   "type": "module",
   "version": "0.1.0",
   "private": true,
@@ -10,18 +10,14 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/check": "^0.9.8",
     "@astrojs/react": "^5.0.3",
     "@astrojs/vercel": "^10.0.4",
-    "@auth/core": "^0.37.0",
-    "@convex-dev/auth": "^0.0.91",
     "@nanostores/react": "^1.1.0",
     "@tailwindcss/vite": "^4.2.2",
     "astro": "^6.1.4",
     "convex": "^1.34.1",
-    "convex-helpers": "^0.1.114",
     "date-fns": "^4.1.0",
-    "geolib": "^3.3.14",
+    "openai": "^6.33.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "tailwindcss": "^4.2.2",
@@ -30,6 +26,12 @@
   "devDependencies": {
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "typescript": "^5.9.3"
+    "typescript": "^6.0.2"
+  },
+  "overrides": {
+    "vite": "^7",
+    "@vercel/routing-utils": "6.1.1",
+    "path-to-regexp": "6.3.0",
+    "yaml": "2.8.3"
   }
 }
