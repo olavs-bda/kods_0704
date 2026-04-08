@@ -4,18 +4,12 @@ import { useState } from "react";
 import ConvexClientProvider from "./ConvexClientProvider";
 import LoginForm from "./LoginForm";
 import TaskPreview from "./TaskPreview";
-import HelpOverlay from "./HelpOverlay";
 
 export default function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
 
   return (
     <ConvexClientProvider>
-      {/* 8.9 — First-visit onboarding banner */}
-      <div className="mb-4">
-        <HelpOverlay />
-      </div>
-
       {/* Card using tonal layering — no border, surface lift */}
       <div className="relative overflow-hidden rounded-2xl bg-surface-container-lowest shadow-[0_12px_32px_rgba(43,52,55,0.06)]">
         {/* Task preview fills the same space behind the form */}

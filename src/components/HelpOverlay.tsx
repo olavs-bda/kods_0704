@@ -1,99 +1,64 @@
 // src/components/HelpOverlay.tsx
-// 8.9 — Collapsible onboarding help panel explaining the workshop workflow in Latvian
+// Persistent help button (bottom-right) + help modal explaining the workshop workflow in Latvian
 import { useState, useEffect } from "react";
+import { MIN_PASSING_SCORE } from "../../convex/constants";
 
-const HELP_DISMISSED_KEY = "pwc_help_dismissed";
+const ONBOARDING_SHOWN_KEY = "pwc_onboarding_shown";
 
 const steps = [
   {
-    icon: "login",
-    title: "Pieslēgšanās",
+    icon: "assignment",
+    title: "Izlasiet uzdevumu",
     description:
-      "Ievadiet organizācijas kodu un savu dalībnieka kodu, lai piekļūtu darbnīcai.",
+      "Katrs uzdevums apraksta, kādu uzvedni jums jāuzraksta — instrukciju, kontekstu un sagaidāmo rezultātu. Atveriet sadaļas «Padoms» un «Tehnika» zemāk uzdevumā, lai saņemtu norādes.",
   },
   {
     icon: "edit_note",
-    title: "Uzdevumu izpilde",
+    title: "Uzrakstiet savu uzvedni",
     description:
-      "Katram uzdevumam uzrakstiet uzvedni (promptu) atbilstoši instrukcijai. Uzdevumi kļūst grūtāki.",
+      "Ievadiet teksta laukā savu uzvedni latviešu valodā. Esiet konkrēti: norādiet darbību, formātu, garumu un mērķauditoriju. Rādītājs «tokeni» apakšā parāda aptuvenās izmaksas — garāka uzvedne = lielākas izmaksas.",
   },
   {
     icon: "smart_toy",
-    title: "AI atgriezeniskā saite",
+    title: "AI novērtē jūsu uzvedni",
     description:
-      "Pēc iesniegšanas AI novērtēs jūsu uzvedni un sniegs ieteikumus uzlabojumiem latviešu valodā.",
+      "Pēc iesniegšanas AI analizē jūsu uzvedni un piešķir vērtējumu no 1 līdz 10. Jūs saņemsiet konkrētus komentārus par stiprajām pusēm, uzlabojumiem un uzlabotu uzvednes versiju.",
   },
   {
-    icon: "refresh",
-    title: "Uzlabošana",
-    description:
-      "Varat rediģēt un iesniegt uzvedni atkārtoti, lai uzlabotu rezultātu pirms pāriešanas uz nākamo uzdevumu.",
+    icon: "arrow_upward",
+    title: "Uzlabojiet, lai turpinātu",
+    description: `Lai pārietu uz nākamo uzdevumu, vērtējumam jābūt vismaz ${MIN_PASSING_SCORE}/10. Ja vērtējums ir zemāks — izlasiet AI komentārus, pilnveidojiet savu uzvedni un iesniedziet to no jauna. Iesniedziet tikai tad, kad esat veikuši būtiskas izmaiņas — katrs iesniegums izmanto tokenus.`,
   },
 ];
 
-export default function HelpOverlay() {
+/**
+ * @param autoShow — if true, shows onboarding modal on first visit (used on task page)
+ */
+export default function HelpOverlay({
+  autoShow = false,
+}: {
+  autoShow?: boolean;
+}) {
   const [open, setOpen] = useState(false);
-  const [dismissed, setDismissed] = useState(true);
 
   useEffect(() => {
+    if (!autoShow) return;
     try {
-      setDismissed(sessionStorage.getItem(HELP_DISMISSED_KEY) === "true");
-    } catch {
-      setDismissed(false);
+      if (sessionStorage.getItem(ONBOARDING_SHOWN_KEY) !== "true") {
+        setOpen(true);
+        sessionStorage.setItem(ONBOARDING_SHOWN_KEY, "true");
+      }
+    } catch (err: unknown) {
+      console.error("HelpOverlay: failed to access sessionStorage:", err);
     }
-  }, []);
-
-  function handleDismiss() {
-    setDismissed(true);
-    setOpen(false);
-    try {
-      sessionStorage.setItem(HELP_DISMISSED_KEY, "true");
-    } catch {
-      // sessionStorage unavailable — silently continue
-    }
-  }
+  }, [autoShow]);
 
   return (
     <>
-      {/* First-visit banner */}
-      {!dismissed && (
-        <div className="rounded-2xl bg-secondary-container/60 backdrop-blur-sm px-5 py-4 flex items-start gap-3">
-          <span
-            className="material-symbols-outlined text-secondary mt-0.5"
-            style={{ fontVariationSettings: "'FILL' 1" }}
-          >
-            school
-          </span>
-          <div className="flex-1 space-y-1">
-            <p className="text-sm font-semibold text-on-secondary-container">
-              Pirmā reize darbnīcā?
-            </p>
-            <p className="text-xs text-on-secondary-container/80 leading-relaxed">
-              Šī ir AI uzvedņu (promptu) rakstīšanas darbnīca. Jūs saņemsiet
-              uzdevumus un AI atgriezenisko saiti savām uzvedēm.
-            </p>
-            <div className="flex gap-2 pt-1">
-              <button
-                onClick={() => setOpen(true)}
-                className="text-xs font-semibold text-secondary hover:underline"
-              >
-                Uzzināt vairāk
-              </button>
-              <button
-                onClick={handleDismiss}
-                className="text-xs text-on-secondary-container/60 hover:text-on-secondary-container"
-              >
-                Aizvērt
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Help button (always visible) */}
+      {/* Help button (always visible, bottom-right) */}
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-6 right-6 z-50 flex items-center gap-1.5 rounded-full bg-surface-container-highest px-4 py-2 text-xs font-semibold text-on-surface-variant shadow-[0_4px_16px_rgba(43,52,55,0.12)] hover:bg-primary hover:text-on-primary transition-all"
+        className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 flex items-center gap-1.5 rounded-full bg-surface-container-highest px-4 py-2.5 min-h-[44px] text-xs font-semibold text-on-surface-variant shadow-[0_4px_16px_rgba(43,52,55,0.12)] hover:bg-primary hover:text-on-primary transition-all"
         aria-label="Palīdzība"
       >
         <span className="material-symbols-outlined text-base">help</span>
@@ -103,12 +68,12 @@ export default function HelpOverlay() {
       {/* Help modal */}
       {open && (
         <div
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-scrim/40 backdrop-blur-sm p-4"
+          className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-scrim/40 backdrop-blur-sm p-0 sm:p-4"
           onClick={(e) => {
             if (e.target === e.currentTarget) setOpen(false);
           }}
         >
-          <div className="w-full max-w-md rounded-2xl bg-surface-container-lowest p-6 shadow-[0_24px_64px_rgba(43,52,55,0.15)] space-y-5">
+          <div className="w-full max-w-md rounded-t-2xl sm:rounded-2xl bg-surface-container-lowest p-5 sm:p-6 shadow-[0_24px_64px_rgba(43,52,55,0.15)] space-y-5 max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-extrabold text-on-surface">
                 Kā darbojas darbnīca?
@@ -149,18 +114,15 @@ export default function HelpOverlay() {
 
             <div className="rounded-xl bg-tertiary-container/50 px-4 py-3">
               <p className="text-xs text-on-tertiary-container leading-relaxed">
-                <strong>Padoms:</strong> Jo precīzāka un strukturētāka ir jūsu
-                uzvedne, jo labāku rezultātu sniegs AI. Izmantojiet kontekstu,
-                norādiet formātu un mērķauditoriju.
+                <strong>Svarīgi:</strong> Uzdevumi kļūst grūtāki — 1. līmenis
+                māca pamatus, 3. līmenis — sarežģītas tehnikas. Katra uzdevuma
+                „Tehnika" sadaļa izskaidro, ko konkrēti tiek vērtēts.
               </p>
             </div>
 
             <button
-              onClick={() => {
-                setOpen(false);
-                handleDismiss();
-              }}
-              className="w-full rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-on-primary hover:opacity-90 transition-all"
+              onClick={() => setOpen(false)}
+              className="w-full rounded-full bg-primary px-4 py-2.5 min-h-[44px] text-sm font-semibold text-on-primary hover:opacity-90 transition-all"
             >
               Sapratu!
             </button>

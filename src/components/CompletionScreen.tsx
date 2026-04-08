@@ -27,7 +27,7 @@ export default function CompletionScreen({
           Apsveicam! Darbnīca pabeigta!
         </h2>
         <p className="text-sm text-on-surface-variant">
-          Jūs esat veiksmīgi izpildījis visus {totalTasks} uzdevumus.
+          Visi {totalTasks} uzdevumi ir veiksmīgi izpildīti.
         </p>
       </div>
       <button

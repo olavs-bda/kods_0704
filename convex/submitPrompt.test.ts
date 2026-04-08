@@ -82,38 +82,106 @@ describe("parseFeedback", () => {
     const result = parseFeedback("");
     expect(result).toBeNull();
   });
+
+  test("includes score when valid (1–10)", () => {
+    const withScore = JSON.stringify({
+      strengths_lv: "Stiprā puse",
+      weaknesses_lv: "Vājā puse",
+      improvedPrompt_lv: "Labāka uzvedne",
+      explanation_lv: "Skaidrojums",
+      nextStep_lv: "Nākamais solis",
+      score: 7,
+    });
+    const result = parseFeedback(withScore);
+    expect(result).not.toBeNull();
+    expect(result?.score).toBe(7);
+  });
+
+  test("omits score when out of range", () => {
+    const outOfRange = JSON.stringify({
+      strengths_lv: "Stiprā puse",
+      weaknesses_lv: "Vājā puse",
+      improvedPrompt_lv: "Labāka uzvedne",
+      explanation_lv: "Skaidrojums",
+      nextStep_lv: "Nākamais solis",
+      score: 15,
+    });
+    const result = parseFeedback(outOfRange);
+    expect(result).not.toBeNull();
+    expect(result?.score).toBeUndefined();
+  });
+
+  test("rounds float score to integer", () => {
+    const floatScore = JSON.stringify({
+      strengths_lv: "Stiprā puse",
+      weaknesses_lv: "Vājā puse",
+      improvedPrompt_lv: "Labāka uzvedne",
+      explanation_lv: "Skaidrojums",
+      nextStep_lv: "Nākamais solis",
+      score: 6.7,
+    });
+    const result = parseFeedback(floatScore);
+    expect(result?.score).toBe(7);
+  });
+
+  test("omits score when not a number", () => {
+    const nonNumber = JSON.stringify({
+      strengths_lv: "Stiprā puse",
+      weaknesses_lv: "Vājā puse",
+      improvedPrompt_lv: "Labāka uzvedne",
+      explanation_lv: "Skaidrojums",
+      nextStep_lv: "Nākamais solis",
+      score: "high",
+    });
+    const result = parseFeedback(nonNumber);
+    expect(result).not.toBeNull();
+    expect(result?.score).toBeUndefined();
+  });
 });
 
 describe("buildSystemPrompt", () => {
-  test("includes level 1 description for beginner", () => {
+  test("includes level 1 rubric criteria for beginner", () => {
     const prompt = buildSystemPrompt(1);
-    expect(prompt).toContain("beginner");
+    expect(prompt).toContain("Beginner");
+    expect(prompt).toContain("INSTRUCTION CLARITY");
     expect(prompt).toContain("Latvian");
   });
 
-  test("includes level 2 description for intermediate", () => {
+  test("includes level 2 rubric criteria for intermediate", () => {
     const prompt = buildSystemPrompt(2);
     expect(prompt).toContain("Intermediate");
+    expect(prompt).toContain("STRUCTURED OUTPUT FORMAT");
+    expect(prompt).toContain("DELIMITERS");
   });
 
-  test("includes level 3 description for advanced", () => {
+  test("includes level 3 rubric criteria for advanced", () => {
     const prompt = buildSystemPrompt(3);
     expect(prompt).toContain("Advanced");
+    expect(prompt).toContain("ROLE ASSIGNMENT");
+    expect(prompt).toContain("MULTI-STEP REASONING");
   });
 
   test("falls back to level 1 for unknown level", () => {
     const prompt = buildSystemPrompt(99);
-    // Should fall back to level 1 description
-    expect(prompt).toContain("beginner");
+    // Should fall back to level 1 criteria
+    expect(prompt).toContain("Beginner");
   });
 
-  test("returns valid JSON instruction in prompt", () => {
+  test("includes verification rule", () => {
     const prompt = buildSystemPrompt(1);
-    expect(prompt).toContain("strengths_lv");
-    expect(prompt).toContain("weaknesses_lv");
-    expect(prompt).toContain("improvedPrompt_lv");
-    expect(prompt).toContain("explanation_lv");
-    expect(prompt).toContain("nextStep_lv");
+    expect(prompt).toContain("re-read the participant");
+  });
+
+  test("includes scoring guide", () => {
+    const prompt = buildSystemPrompt(1);
+    expect(prompt).toContain("Scoring Guide");
+    expect(prompt).toContain("Off-topic");
+  });
+
+  test("includes task relevance check in rules", () => {
+    const prompt = buildSystemPrompt(1);
+    expect(prompt).toContain("off-topic");
+    expect(prompt).toContain("Off-topic");
   });
 });
 
@@ -141,6 +209,50 @@ describe("buildUserPrompt", () => {
     const prompt = buildUserPrompt("My prompt", taskWithHints);
     expect(prompt).toContain("My prompt");
     expect(prompt).toContain("2"); // level 2
+  });
+
+  test("includes previous prompts for comparative feedback", () => {
+    const previousPrompts = ["First attempt", "Second attempt"];
+    const prompt = buildUserPrompt(
+      "Third attempt",
+      sampleTask,
+      previousPrompts,
+    );
+    expect(prompt).toContain("Previous Prompt (attempt #1)");
+    expect(prompt).toContain("First attempt");
+    expect(prompt).toContain("Previous Prompt (attempt #2)");
+    expect(prompt).toContain("Second attempt");
+    expect(prompt).toContain("Current Prompt (attempt #3)");
+    expect(prompt).toContain("Third attempt");
+    expect(prompt).toContain("Compare");
+  });
+
+  test("omits comparative context when no previous prompts", () => {
+    const prompt = buildUserPrompt("First try", sampleTask, []);
+    expect(prompt).not.toContain("Previous Prompt");
+    expect(prompt).not.toContain("Compare");
+    expect(prompt).toContain("First try");
+  });
+
+  test("includes teachingNote_lv when present in task", () => {
+    const taskWithNote = {
+      ...sampleTask,
+      teachingNote_lv:
+        "Skaidra instrukcija (T1): laba uzvedne sākas ar darbības vārdu.",
+    };
+    const prompt = buildUserPrompt("My prompt", taskWithNote);
+    expect(prompt).toContain("Teaching Focus");
+    expect(prompt).toContain("Skaidra instrukcija");
+  });
+
+  test("includes example_lv when present in task", () => {
+    const taskWithExample = {
+      ...sampleTask,
+      example_lv: "Apkopo šo tekstu 3 īsos teikumos.",
+    };
+    const prompt = buildUserPrompt("My prompt", taskWithExample);
+    expect(prompt).toContain("Reference Example");
+    expect(prompt).toContain("Apkopo šo tekstu 3 īsos teikumos.");
   });
 });
 

@@ -44,7 +44,12 @@ export default function LoginForm({
         return;
       }
 
-      persistSession(result.sessionId, trimmedOrg, trimmedParticipant);
+      persistSession(
+        result.sessionId,
+        trimmedOrg,
+        trimmedParticipant,
+        result.expiresAt,
+      );
       window.location.href = "/task";
     } catch (err: unknown) {
       console.error("Login failed:", err);
@@ -116,7 +121,7 @@ export default function LoginForm({
       <button
         type="submit"
         disabled={loading}
-        className="w-full rounded-full bg-primary px-4 py-3 text-sm font-semibold text-on-primary shadow-[0_4px_16px_rgba(12,95,174,0.25)] hover:shadow-[0_6px_20px_rgba(12,95,174,0.35)] hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-50 transition-all"
+        className="w-full rounded-full bg-primary px-4 py-3 min-h-[44px] text-sm font-semibold text-on-primary shadow-[0_4px_16px_rgba(12,95,174,0.25)] hover:shadow-[0_6px_20px_rgba(12,95,174,0.35)] hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-50 transition-all"
       >
         {loading ? "Notiek pieslēgšanās..." : "Sākt darbnīcu"}
       </button>

@@ -30,7 +30,10 @@ async function seedOrg(
       code: "TEST-ORG",
       name: "Test Org",
       taskIds,
-      settings: { sessionExpiryHours: 48, maxSubmissionsPerUser: maxSubmissions },
+      settings: {
+        sessionExpiryHours: 48,
+        maxSubmissionsPerUser: maxSubmissions,
+      },
     });
   });
 }
@@ -69,10 +72,10 @@ describe("getSubmissionContext (internal)", () => {
     const orgId = await seedOrg(t, [taskId]);
     const sessionId = await seedSession(t, orgId);
 
-    const result = await t.query(
-      internal.submissions.getSubmissionContext,
-      { sessionId, taskId },
-    );
+    const result = await t.query(internal.submissions.getSubmissionContext, {
+      sessionId,
+      taskId,
+    });
     expect("task" in result).toBe(true);
     if ("task" in result) {
       expect(result.task._id).toBe(taskId);
@@ -99,10 +102,10 @@ describe("getSubmissionContext (internal)", () => {
       return id;
     });
 
-    const result = await t.query(
-      internal.submissions.getSubmissionContext,
-      { sessionId, taskId },
-    );
+    const result = await t.query(internal.submissions.getSubmissionContext, {
+      sessionId,
+      taskId,
+    });
     expect("error" in result).toBe(true);
     if ("error" in result) {
       expect(result.error).toContain("Sesija");
@@ -115,10 +118,10 @@ describe("getSubmissionContext (internal)", () => {
     const orgId = await seedOrg(t, [taskId]);
     const sessionId = await seedSession(t, orgId, { expired: true });
 
-    const result = await t.query(
-      internal.submissions.getSubmissionContext,
-      { sessionId, taskId },
-    );
+    const result = await t.query(internal.submissions.getSubmissionContext, {
+      sessionId,
+      taskId,
+    });
     expect("error" in result).toBe(true);
     if ("error" in result) {
       expect(result.error).toContain("beigusies");
@@ -143,10 +146,10 @@ describe("getSubmissionContext (internal)", () => {
       return id;
     });
 
-    const result = await t.query(
-      internal.submissions.getSubmissionContext,
-      { sessionId, taskId },
-    );
+    const result = await t.query(internal.submissions.getSubmissionContext, {
+      sessionId,
+      taskId,
+    });
     expect("error" in result).toBe(true);
     if ("error" in result) {
       expect(result.error).toContain("Organizācija");
@@ -159,10 +162,10 @@ describe("getSubmissionContext (internal)", () => {
     const orgId = await seedOrg(t, [taskId], 3);
     const sessionId = await seedSession(t, orgId, { submissionCount: 3 });
 
-    const result = await t.query(
-      internal.submissions.getSubmissionContext,
-      { sessionId, taskId },
-    );
+    const result = await t.query(internal.submissions.getSubmissionContext, {
+      sessionId,
+      taskId,
+    });
     expect("error" in result).toBe(true);
     if ("error" in result) {
       expect(result.error).toContain("limits");
@@ -176,10 +179,10 @@ describe("getSubmissionContext (internal)", () => {
     const orgId = await seedOrg(t, []);
     const sessionId = await seedSession(t, orgId);
 
-    const result = await t.query(
-      internal.submissions.getSubmissionContext,
-      { sessionId, taskId },
-    );
+    const result = await t.query(internal.submissions.getSubmissionContext, {
+      sessionId,
+      taskId,
+    });
     expect("error" in result).toBe(true);
     if ("error" in result) {
       expect(result.error).toContain("Uzdevums");
@@ -314,5 +317,109 @@ describe("getTaskSubmissions (public)", () => {
     });
     expect(result).toHaveLength(1);
     expect(result[0].feedback).toBeUndefined();
+  });
+});
+
+describe("getPreviousPrompts (internal)", () => {
+  test("returns empty array when no submissions exist", async () => {
+    const t = convexTest(schema, modules);
+    const taskId = await seedTask(t);
+    const orgId = await seedOrg(t, [taskId]);
+    const sessionId = await seedSession(t, orgId);
+
+    const result = await t.query(internal.submissions.getPreviousPrompts, {
+      sessionId,
+      taskId,
+    });
+    expect(result).toEqual([]);
+  });
+
+  test("returns previous prompts in chronological order, capped at 2", async () => {
+    const t = convexTest(schema, modules);
+    const taskId = await seedTask(t);
+    const orgId = await seedOrg(t, [taskId]);
+    const sessionId = await seedSession(t, orgId);
+
+    await t.run(async (ctx) => {
+      await ctx.db.insert("submissions", {
+        sessionId,
+        taskId,
+        prompt: "First attempt",
+        createdAt: Date.now() - 3000,
+        feedback: sampleFeedback,
+      });
+      await ctx.db.insert("submissions", {
+        sessionId,
+        taskId,
+        prompt: "Second attempt",
+        createdAt: Date.now() - 2000,
+        feedback: sampleFeedback,
+      });
+      await ctx.db.insert("submissions", {
+        sessionId,
+        taskId,
+        prompt: "Third attempt",
+        createdAt: Date.now() - 1000,
+        feedback: sampleFeedback,
+      });
+    });
+
+    const result = await t.query(internal.submissions.getPreviousPrompts, {
+      sessionId,
+      taskId,
+    });
+    // Capped at 2, in chronological order
+    expect(result).toHaveLength(2);
+    expect(result[0]).toBe("Second attempt");
+    expect(result[1]).toBe("Third attempt");
+  });
+});
+
+describe("storeSubmission with tokenUsage", () => {
+  test("stores submission with token usage data", async () => {
+    const t = convexTest(schema, modules);
+    const taskId = await seedTask(t);
+    const orgId = await seedOrg(t, [taskId]);
+    const sessionId = await seedSession(t, orgId);
+
+    const tokenUsage = {
+      promptTokens: 150,
+      completionTokens: 200,
+      totalTokens: 350,
+    };
+
+    const submissionId = await t.mutation(
+      internal.submissions.storeSubmission,
+      {
+        sessionId,
+        taskId,
+        prompt: "Test prompt",
+        feedback: sampleFeedback,
+        tokenUsage,
+      },
+    );
+
+    const submission = await t.run(async (ctx) => ctx.db.get(submissionId));
+    expect(submission?.tokenUsage).toEqual(tokenUsage);
+  });
+
+  test("stores submission without token usage when undefined", async () => {
+    const t = convexTest(schema, modules);
+    const taskId = await seedTask(t);
+    const orgId = await seedOrg(t, [taskId]);
+    const sessionId = await seedSession(t, orgId);
+
+    const submissionId = await t.mutation(
+      internal.submissions.storeSubmission,
+      {
+        sessionId,
+        taskId,
+        prompt: "Test prompt",
+        feedback: sampleFeedback,
+      },
+    );
+
+    const submission = await t.run(async (ctx) => ctx.db.get(submissionId));
+    expect(submission?.tokenUsage).toBeUndefined();
   });
 });

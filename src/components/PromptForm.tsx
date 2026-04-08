@@ -1,6 +1,10 @@
 // src/components/PromptForm.tsx
-// Prompt textarea + submit button with loading/error states
-import { type FormEvent } from "react";
+// Prompt textarea + submit button with loading/error states and token counter
+import { type FormEvent, useState, useEffect, useRef } from "react";
+import { countTokens, estimateCost } from "gpt-tokenizer/model/gpt-4o";
+import { USD_TO_EUR_RATE } from "../../convex/constants";
+
+const TOKEN_COUNT_DEBOUNCE_MS = 300;
 
 interface PromptFormProps {
   prompt: string;
@@ -17,6 +21,27 @@ export default function PromptForm({
   submitting,
   error,
 }: PromptFormProps) {
+  const [tokenInfo, setTokenInfo] = useState<{
+    tokens: number;
+    costEur: number;
+  } | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  useEffect(() => {
+    if (!prompt.trim()) {
+      setTokenInfo(null);
+      return;
+    }
+    clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      const tokens = countTokens(prompt);
+      const costUsd = estimateCost(tokens);
+      const inputCostEur = (costUsd.main?.input ?? 0) * USD_TO_EUR_RATE;
+      setTokenInfo({ tokens, costEur: inputCostEur });
+    }, TOKEN_COUNT_DEBOUNCE_MS);
+    return () => clearTimeout(timerRef.current);
+  }, [prompt]);
+
   return (
     <form
       onSubmit={onSubmit}
@@ -27,19 +52,24 @@ export default function PromptForm({
           htmlFor="prompt"
           className="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-1"
         >
-          Jūsu prompts
+          Jūsu uzvedne
         </label>
         <textarea
           id="prompt"
           value={prompt}
           onChange={(e) => onPromptChange(e.target.value)}
           rows={5}
-          placeholder="Ierakstiet savu promptu šeit..."
+          placeholder="Ierakstiet savu uzvedni šeit..."
           disabled={submitting}
           className="block w-full rounded-xl bg-surface-container-highest border-0 px-4 py-3 text-sm text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:text-outline transition-colors resize-none"
         />
-        <div className="mt-1 text-right text-xs text-outline">
-          {prompt.length} rakstzīmes
+        <div className="mt-1 flex justify-between text-xs text-outline">
+          <span>
+            {tokenInfo ?
+              `~${tokenInfo.tokens} tokeni | ~€${tokenInfo.costEur.toFixed(3)}`
+            : ""}
+          </span>
+          <span>{prompt.length} rakstzīmes</span>
         </div>
       </div>
 
@@ -55,9 +85,9 @@ export default function PromptForm({
       <button
         type="submit"
         disabled={submitting || !prompt.trim()}
-        className="w-full rounded-full bg-primary px-4 py-3 text-sm font-semibold text-on-primary shadow-[0_4px_16px_rgba(12,95,174,0.25)] hover:shadow-[0_6px_20px_rgba(12,95,174,0.35)] hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-50 transition-all"
+        className="w-full rounded-full bg-primary px-4 py-3 min-h-[44px] text-sm font-semibold text-on-primary shadow-[0_4px_16px_rgba(12,95,174,0.25)] hover:shadow-[0_6px_20px_rgba(12,95,174,0.35)] hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-50 transition-all"
       >
-        {submitting ? "Notiek analīze..." : "Iesniegt promptu"}
+        {submitting ? "Notiek analīze..." : "Iesniegt uzvedni"}
       </button>
     </form>
   );
@@ -90,7 +120,7 @@ export function SubmittingIndicator() {
           Analizējam jūsu ievadi...
         </h3>
         <p className="text-on-surface-variant text-sm max-w-xs mx-auto">
-          Mūsu algoritmi pārskata promptu, lai nodrošinātu atbilstību valsts
+          Mūsu algoritmi pārskata uzvedni, lai nodrošinātu atbilstību valsts
           pārvaldes standartiem.
         </p>
       </div>

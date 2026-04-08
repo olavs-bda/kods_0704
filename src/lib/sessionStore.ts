@@ -3,26 +3,25 @@
 import type { Id } from "../../convex/_generated/dataModel";
 
 const SESSION_KEY = "pwc_session";
-// Sessions survive tab-close; cleared after 72h on the client side
-const SESSION_TTL_MS = 72 * 60 * 60 * 1000;
 
 interface StoredSession {
   sessionId: string;
   organisationCode: string;
   participantCode: string;
-  storedAt: number;
+  expiresAt: number;
 }
 
 export function persistSession(
   sessionId: Id<"sessions">,
   organisationCode: string,
   participantCode: string,
+  expiresAt: number,
 ): void {
   const data: StoredSession = {
     sessionId,
     organisationCode,
     participantCode,
-    storedAt: Date.now(),
+    expiresAt,
   };
   localStorage.setItem(SESSION_KEY, JSON.stringify(data));
 }
@@ -32,12 +31,13 @@ export function loadSession(): Id<"sessions"> | null {
     const raw = localStorage.getItem(SESSION_KEY);
     if (!raw) return null;
     const data: StoredSession = JSON.parse(raw);
-    if (Date.now() - data.storedAt > SESSION_TTL_MS) {
+    if (Date.now() > data.expiresAt) {
       localStorage.removeItem(SESSION_KEY);
       return null;
     }
     return data.sessionId as Id<"sessions">;
-  } catch {
+  } catch (err: unknown) {
+    console.error("sessionStore.loadSession failed:", err);
     return null;
   }
 }
@@ -48,7 +48,8 @@ export function loadParticipantCode(): string | null {
     if (!raw) return null;
     const data: StoredSession = JSON.parse(raw);
     return data.participantCode ?? null;
-  } catch {
+  } catch (err: unknown) {
+    console.error("sessionStore.loadParticipantCode failed:", err);
     return null;
   }
 }

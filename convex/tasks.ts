@@ -4,7 +4,11 @@ import type { QueryCtx, MutationCtx } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
 import { v } from "convex/values";
 import { SESSION_EXPIRED_ERROR } from "./constants";
-import { feedbackValidator, taskFieldsValidator } from "./validators";
+import {
+  feedbackValidator,
+  taskFieldsValidator,
+  errorResponseValidator,
+} from "./validators";
 
 // Helper: strip system fields from task document
 function pickTaskFields(task: Doc<"tasks">) {
@@ -18,6 +22,7 @@ function pickTaskFields(task: Doc<"tasks">) {
     level: task.level,
     hints_lv: task.hints_lv,
     example_lv: task.example_lv,
+    teachingNote_lv: task.teachingNote_lv,
   };
 }
 
@@ -44,28 +49,40 @@ export const getCurrentTask = query({
       totalTasks: v.number(),
       isCompleted: v.boolean(),
     }),
-    v.object({ error: v.string() }),
+    errorResponseValidator,
   ),
   handler: async (ctx, args) => {
     const session = await ctx.db.get(args.sessionId);
     if (!session) {
-      return { error: "Sesija nav atrasta." };
+      return {
+        error: "Sesija nav atrasta.",
+        errorCode: "SESSION_NOT_FOUND" as const,
+      };
     }
 
     if (Date.now() > session.expiresAt) {
-      return { error: SESSION_EXPIRED_ERROR };
+      return {
+        error: SESSION_EXPIRED_ERROR,
+        errorCode: "SESSION_EXPIRED" as const,
+      };
     }
 
     const org = await ctx.db.get(session.organisationId);
     if (!org) {
-      return { error: "Organizācija nav atrasta." };
+      return {
+        error: "Organizācija nav atrasta.",
+        errorCode: "ORG_NOT_FOUND" as const,
+      };
     }
 
     const tasks = await resolveOrgTasks(ctx, org);
     const totalTasks = tasks.length;
 
     if (totalTasks === 0) {
-      return { error: "Nav uzdevumu šai organizācijai." };
+      return {
+        error: "Nav uzdevumu šai organizācijai.",
+        errorCode: "TASK_NOT_FOUND" as const,
+      };
     }
 
     // All tasks completed
@@ -96,28 +113,40 @@ export const advanceTask = mutation({
       totalTasks: v.number(),
       isCompleted: v.boolean(),
     }),
-    v.object({ error: v.string() }),
+    errorResponseValidator,
   ),
   handler: async (ctx, args) => {
     const session = await ctx.db.get(args.sessionId);
     if (!session) {
-      return { error: "Sesija nav atrasta." };
+      return {
+        error: "Sesija nav atrasta.",
+        errorCode: "SESSION_NOT_FOUND" as const,
+      };
     }
 
     if (Date.now() > session.expiresAt) {
-      return { error: SESSION_EXPIRED_ERROR };
+      return {
+        error: SESSION_EXPIRED_ERROR,
+        errorCode: "SESSION_EXPIRED" as const,
+      };
     }
 
     const org = await ctx.db.get(session.organisationId);
     if (!org) {
-      return { error: "Organizācija nav atrasta." };
+      return {
+        error: "Organizācija nav atrasta.",
+        errorCode: "ORG_NOT_FOUND" as const,
+      };
     }
 
     const totalTasks = org.taskIds.length;
     const nextIndex = session.currentTaskIndex + 1;
 
     if (nextIndex > totalTasks) {
-      return { error: "Visi uzdevumi jau ir pabeigti." };
+      return {
+        error: "Visi uzdevumi jau ir pabeigti.",
+        errorCode: "ALL_TASKS_COMPLETED" as const,
+      };
     }
 
     await ctx.db.patch(args.sessionId, {
@@ -155,14 +184,22 @@ export const getTaskSummaries = query({
         level: v.number(),
       }),
     ),
-    v.object({ error: v.string() }),
+    errorResponseValidator,
   ),
   handler: async (ctx, args) => {
     const session = await ctx.db.get(args.sessionId);
-    if (!session) return { error: "Sesija nav atrasta." };
+    if (!session)
+      return {
+        error: "Sesija nav atrasta.",
+        errorCode: "SESSION_NOT_FOUND" as const,
+      };
 
     const org = await ctx.db.get(session.organisationId);
-    if (!org) return { error: "Organizācija nav atrasta." };
+    if (!org)
+      return {
+        error: "Organizācija nav atrasta.",
+        errorCode: "ORG_NOT_FOUND" as const,
+      };
 
     const summaries = [];
     for (const taskId of org.taskIds) {

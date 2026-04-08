@@ -1,7 +1,7 @@
 // convex/schema.ts
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
-import { feedbackValidator } from "./validators";
+import { feedbackValidator, tokenUsageValidator } from "./validators";
 
 export default defineSchema({
   organisations: defineTable({
@@ -36,7 +36,8 @@ export default defineSchema({
     level: v.number(),
     hints_lv: v.optional(v.string()),
     example_lv: v.optional(v.string()),
-  }).index("by_slug", ["slug"]),
+    teachingNote_lv: v.optional(v.string()),
+  }),
 
   submissions: defineTable({
     sessionId: v.id("sessions"),
@@ -44,7 +45,9 @@ export default defineSchema({
     prompt: v.string(),
     createdAt: v.number(),
     feedback: v.optional(feedbackValidator),
+    tokenUsage: v.optional(tokenUsageValidator),
   })
     .index("by_sessionId", ["sessionId"])
-    .index("by_sessionId_and_taskId", ["sessionId", "taskId"]),
+    .index("by_sessionId_and_taskId", ["sessionId", "taskId"])
+    .index("by_taskId", ["taskId"]),
 });

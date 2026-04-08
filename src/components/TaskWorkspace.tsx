@@ -4,12 +4,12 @@ import { useState, useEffect, type FormEvent } from "react";
 import { useQuery, useAction, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
-import { SESSION_EXPIRED_ERROR } from "../../convex/constants";
 import {
   loadSession,
   loadParticipantCode,
   clearSession,
 } from "../lib/sessionStore";
+import { MIN_PASSING_SCORE } from "../../convex/constants";
 import FeedbackDisplay from "./FeedbackDisplay";
 import SubmissionHistory from "./SubmissionHistory";
 import TaskStepper from "./TaskStepper";
@@ -18,6 +18,7 @@ import PromptForm, { SubmittingIndicator } from "./PromptForm";
 import CompletionScreen from "./CompletionScreen";
 import SessionError from "./SessionError";
 import LoadingSkeleton from "./LoadingSkeleton";
+import HelpOverlay from "./HelpOverlay";
 
 interface Feedback {
   strengths_lv: string;
@@ -25,6 +26,7 @@ interface Feedback {
   improvedPrompt_lv: string;
   explanation_lv: string;
   nextStep_lv: string;
+  score?: number;
 }
 
 export default function TaskWorkspace() {
@@ -75,8 +77,8 @@ function TaskView({ sessionId }: { sessionId: Id<"sessions"> }) {
   useEffect(() => {
     if (
       taskData &&
-      "error" in taskData &&
-      taskData.error === SESSION_EXPIRED_ERROR
+      "errorCode" in taskData &&
+      taskData.errorCode === "SESSION_EXPIRED"
     ) {
       clearSession();
       // replace() prevents the user navigating back into the expired session
@@ -124,6 +126,11 @@ function TaskView({ sessionId }: { sessionId: Id<"sessions"> }) {
       });
 
       if ("error" in result) {
+        if ("errorCode" in result && result.errorCode === "SESSION_EXPIRED") {
+          clearSession();
+          window.location.replace("/");
+          return;
+        }
         setError(result.error ?? "Nezināma kļūda.");
       } else {
         setLatestFeedback(result.feedback);
@@ -157,7 +164,7 @@ function TaskView({ sessionId }: { sessionId: Id<"sessions"> }) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 pb-16">
       {/* Task Stepper */}
       <TaskStepper
         sessionId={sessionId}
@@ -177,7 +184,7 @@ function TaskView({ sessionId }: { sessionId: Id<"sessions"> }) {
         <div className="flex items-center gap-3">
           {participantCode && (
             <span className="text-xs text-on-surface-variant">
-              Sveiks,{" "}
+              Sveiki,{" "}
               <span className="font-semibold text-on-surface">
                 {participantCode}
               </span>
@@ -185,7 +192,7 @@ function TaskView({ sessionId }: { sessionId: Id<"sessions"> }) {
           )}
           <button
             onClick={handleLogout}
-            className="text-xs text-outline hover:text-on-surface transition-colors"
+            className="text-xs text-outline hover:text-on-surface transition-colors min-h-[44px] px-2"
           >
             Iziet
           </button>
@@ -194,13 +201,27 @@ function TaskView({ sessionId }: { sessionId: Id<"sessions"> }) {
 
       <TaskDisplay task={task} />
 
-      <PromptForm
-        prompt={prompt}
-        onPromptChange={setPrompt}
-        onSubmit={handleSubmit}
-        submitting={submitting}
-        error={error}
-      />
+      {/* Show prompt text read-only after passing, editable form otherwise */}
+      {(
+        latestFeedback?.score != null &&
+        latestFeedback.score >= MIN_PASSING_SCORE
+      ) ?
+        <div className="space-y-1">
+          <label className="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-1">
+            Jūsu uzvedne
+          </label>
+          <div className="rounded-xl bg-surface-container-highest px-4 py-3 text-sm text-on-surface whitespace-pre-wrap opacity-70">
+            {prompt}
+          </div>
+        </div>
+      : <PromptForm
+          prompt={prompt}
+          onPromptChange={setPrompt}
+          onSubmit={handleSubmit}
+          submitting={submitting}
+          error={error}
+        />
+      }
 
       {/* Loading State */}
       {submitting && <SubmittingIndicator />}
@@ -208,26 +229,43 @@ function TaskView({ sessionId }: { sessionId: Id<"sessions"> }) {
       {/* Feedback Display */}
       {latestFeedback && <FeedbackDisplay feedback={latestFeedback} />}
 
-      {/* Next Task Button (7.5) */}
-      {latestFeedback && (
-        <button
-          onClick={handleAdvance}
-          disabled={advancing}
-          className="w-full rounded-full bg-surface-container-highest px-4 py-3 text-sm font-semibold text-primary hover:bg-primary hover:text-on-primary shadow-[0_4px_16px_rgba(12,95,174,0.1)] hover:shadow-[0_4px_16px_rgba(12,95,174,0.25)] focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50 transition-all"
-        >
-          {advancing ?
-            "Notiek pāreja..."
-          : taskIndex + 1 < totalTasks ?
-            "Nākamais uzdevums →"
-          : "Pabeigt darbnīcu →"}
-        </button>
-      )}
+      {/* Next Task / Satisfaction Gate */}
+      {latestFeedback &&
+        (() => {
+          const passing =
+            latestFeedback.score != null &&
+            latestFeedback.score >= MIN_PASSING_SCORE;
+          return passing ?
+              <button
+                onClick={handleAdvance}
+                disabled={advancing}
+                className="w-full rounded-full bg-primary px-4 py-3 min-h-[44px] text-sm font-semibold text-on-primary shadow-[0_4px_16px_rgba(12,95,174,0.25)] hover:shadow-[0_6px_20px_rgba(12,95,174,0.35)] hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50 transition-all"
+              >
+                {advancing ?
+                  "Notiek pāreja..."
+                : taskIndex + 1 < totalTasks ?
+                  "Nākamais uzdevums →"
+                : "Pabeigt darbnīcu →"}
+              </button>
+            : <div className="rounded-xl bg-tertiary-container/30 px-4 py-3 text-center space-y-1">
+                <p className="text-sm font-semibold text-on-tertiary-container">
+                  Mēģiniet uzlabot savu uzvedni, lai sasniegtu vismaz{" "}
+                  {MIN_PASSING_SCORE}/10
+                </p>
+                <p className="text-xs text-on-tertiary-container/70">
+                  Izlasiet AI ieteikumus un iesniedziet uzlabotu uzvedni.
+                </p>
+              </div>;
+        })()}
 
       {/* Submission History (7.6) */}
       <SubmissionHistory
         sessionId={sessionId}
         taskId={task._id}
       />
+
+      {/* Help button + onboarding modal (auto-shows on first visit) */}
+      <HelpOverlay autoShow />
     </div>
   );
 }

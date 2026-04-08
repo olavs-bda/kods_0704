@@ -89,10 +89,11 @@ npx vitest run       # Run all tests (must pass before committing)
 ## Quality Gates
 
 - **Type checking**: `npx tsc --noEmit` must pass with zero errors before committing
-- **Tests**: `npx vitest run` — all tests must pass; new backend logic requires tests
+- **Tests**: `npx vitest run` — all tests must pass; new backend logic requires tests; new React components require basic render/interaction tests
+- **Component tests**: use `// @vitest-environment jsdom` docblock, `@testing-library/react`, and `afterEach(() => cleanup())`
 - **No `any`**: grep for `: any` before committing — zero tolerance
 - **Error logging**: every `catch` block must `console.error(contextMsg, err)` before user-facing fallback
-- **Shared validators**: reuse validators from `convex/validators.ts` — never duplicate feedback or task-field shapes
+- **Shared validators**: reuse validators from `convex/validators.ts` — never duplicate feedback, error, or task-field shapes
 
 ## Commit Messages
 

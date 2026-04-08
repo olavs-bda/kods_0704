@@ -57,7 +57,7 @@ export default function SubmissionHistory({
                 <div className="space-y-3 px-4 py-3 bg-surface-container-lowest rounded-b-2xl">
                   <div>
                     <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">
-                      Jūsu prompts
+                      Jūsu uzvedne
                     </p>
                     <p className="mt-1 whitespace-pre-wrap text-sm text-on-surface">
                       {sub.prompt}

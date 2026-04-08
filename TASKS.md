@@ -55,7 +55,7 @@
 | 2.2 | Define Convex schema: sessions table      | ✅ COMPLETED | HIGH     | organisationId, participantCode, currentTaskIndex, startedAt, lastActiveAt, expiresAt, submissionCount; indexes by_organisationId_and_participantCode |
 | 2.3 | Define Convex schema: tasks table         | ✅ COMPLETED | HIGH     | slug, title_lv, instruction_lv, context_lv, expectedOutput, level, hints_lv (optional), example_lv (optional); index by_slug                          |
 | 2.4 | Define Convex schema: submissions table   | ✅ COMPLETED | HIGH     | sessionId, taskId (reference to tasks), prompt, createdAt, feedback object; index by_sessionId                                                        |
-| 2.5 | Seed initial organisation + task data     | ✅ COMPLETED | MEDIUM   | `convex/seed.ts` — 1 org (BDA-2026), 6 individual tasks (2/level), org links via taskIds array                                         |
+| 2.5 | Seed initial organisation + task data     | ✅ COMPLETED | MEDIUM   | `convex/seed.ts` — 1 org (BDA-2026), 6 individual tasks (2/level), org links via taskIds array                                                        |
 
 ## Phase 3: Session Management ✅ COMPLETED
 
@@ -106,17 +106,45 @@
 
 ## Phase 8: Testing & Polish 🚧 IN PROGRESS
 
-| ID  | Task                                           | Status       | Priority | Details                                                                           |
-| --- | ---------------------------------------------- | --------- | -------- | --------------------------------------------------------------------------------- |
-| 8.1 | End-to-end access → task → submit flow testing | ✅ COMPLETED | HIGH     | `convex/flow.test.ts` — 13 tests: session creation, task retrieval, advancement, submission storage, rate-limit enforcement |
+| ID  | Task                                           | Status       | Priority | Details                                                                                                                                                |
+| --- | ---------------------------------------------- | ------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 8.1 | End-to-end access → task → submit flow testing | ✅ COMPLETED | HIGH     | `convex/flow.test.ts` — 13 tests: session creation, task retrieval, advancement, submission storage, rate-limit enforcement                            |
 | 8.2 | Session expiry edge cases                      | ✅ COMPLETED | HIGH     | `convex/expiry.test.ts` — 10 tests: expired session rejected at login/touch/task/advance/submit; mid-task expiry auto-redirects in `TaskWorkspace.tsx` |
-| 8.3 | Rate limiting validation                       | ✅ COMPLETED | HIGH     | `convex/rateLimit.test.ts` — 8 tests: boundary (at/below/above limit), enforcement through storeSubmission, Latvian error messages |
-| 8.4 | OpenAI error handling                          | ✅ COMPLETED | HIGH     | `classifyOpenAIError()` in submitPrompt.ts — timeout (30s), rate limit, auth, connection, 5xx; all Latvian messages; 5 tests |
-| 8.5 | Mobile responsiveness                          | ⏸ PENDING | MEDIUM   | Verify all pages work on mobile; touch-friendly inputs and buttons                |
-| 8.6 | UI/UX polish                                   | ⏸ PENDING | MEDIUM   | Consistent spacing, typography, Latvian copy review                               |
-| 8.7 | Production deployment to Vercel                | ⏸ PENDING | HIGH     | Environment vars set, Convex prod deployment, OpenAI key configured, smoke test   |
-| 8.8 | Token-level usage tracking                     | ⏸ PENDING | MEDIUM   | Track per-submission token usage (input/output); enforce budget cap per user      |
-| 8.9 | User onboarding / help                         | ✅ COMPLETED | MEDIUM   | `HelpOverlay.tsx` — first-visit banner + persistent help button + 4-step modal walkthrough; all Latvian |
+| 8.3 | Rate limiting validation                       | ✅ COMPLETED | HIGH     | `convex/rateLimit.test.ts` — 8 tests: boundary (at/below/above limit), enforcement through storeSubmission, Latvian error messages                     |
+| 8.4 | OpenAI error handling                          | ✅ COMPLETED | HIGH     | `classifyOpenAIError()` in submitPrompt.ts — timeout (30s), rate limit, auth, connection, 5xx; all Latvian messages; 5 tests                           |
+| 8.5 | Mobile responsiveness                          | ⏸ PENDING    | MEDIUM   | Verify all pages work on mobile; touch-friendly inputs and buttons                                                                                     |
+| 8.6 | UI/UX polish                                   | ⏸ PENDING    | MEDIUM   | Consistent spacing, typography, Latvian copy review                                                                                                    |
+| 8.7 | Production deployment to Vercel                | ⏸ PENDING    | HIGH     | Environment vars set, Convex prod deployment, OpenAI key configured, smoke test                                                                        |
+| 8.9 | User onboarding / help                         | ✅ COMPLETED | MEDIUM   | `HelpOverlay.tsx` — first-visit banner + persistent help button + 4-step modal walkthrough; all Latvian                                                |
+
+## Phase 9: Evaluation Engine ✅ COMPLETED
+
+| ID  | Task                                    | Status       | Priority | Details                                                                                                                              |
+| --- | --------------------------------------- | ------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------ | -------- |
+| 9.1 | Level-aware system prompt with rubric   | ✅ COMPLETED | HIGH     | `buildSystemPrompt()` rewritten with per-level criteria (T1–T21), tone calibration, improvement ceiling; see `PROMPT_PLAN.md` rubric |
+| 9.2 | Model selection per level               | ✅ COMPLETED | HIGH     | `AI_MODEL_BY_LEVEL` in constants.ts: L1=gpt-4o-mini, L2=gpt-5-mini, L3=gpt-5.4-mini; used in submitPrompt.ts                         |
+| 9.3 | Expand to 15 tasks (5 per level)        | ✅ COMPLETED | HIGH     | `seed.ts` updated with all 15 tasks from `PROMPT_PLAN.md`; technique grouping (2–3 per task)                                         |
+| 9.4 | Scoring system (score + criteriaScores) | ✅ COMPLETED | HIGH     | `score` (1–10) added to feedbackValidator, system prompt, parseFeedback; displayed as badge in FeedbackDisplay                       |
+| 9.5 | Comparative feedback (previous attempt) | ✅ COMPLETED | HIGH     | `getPreviousPrompts` internalQuery; `buildUserPrompt` includes previous attempts; comparison instruction in user message             |
+| 9.6 | Pre-task teaching notes                 | ✅ COMPLETED | HIGH     | `teachingNote_lv` in schema, validators, seed (all 15 tasks); collapsible "Tehnika" panel in TaskDisplay                             |
+| 9.7 | Token usage tracking                    | ✅ COMPLETED | MEDIUM   | `tokenUsageValidator` + schema field; extracted from `response.usage` in submitPrompt; passed to storeSubmission                     |
+| 9.8 | Client-side token counter (EUR cost)    | ✅ COMPLETED | MEDIUM   | `gpt-tokenizer` in PromptForm; debounced 300ms `countTokens()` + `estimateCost()`; shows `~X tokeni                                  | ~€Y.YYY` |
+
+## Phase 10: UX & Pedagogy ✅ COMPLETED
+
+| ID   | Task                              | Status       | Priority | Details                                                                                                |
+| ---- | --------------------------------- | ------------ | -------- | ------------------------------------------------------------------------------------------------------ |
+| 10.2 | Technique badge system            | ✅ COMPLETED | LOW      | TECHNIQUE_LABELS + TASK_TECHNIQUES in constants.ts; badges rendered in TaskDisplay with tooltips       |
+| 10.3 | Response caching / deduplication  | ✅ COMPLETED | LOW      | `getCachedFeedback` internalQuery in submissions.ts; cache check in submitPrompt.ts before OpenAI call |
+| 10.4 | Task set presets / seeding script | ⏸ DEFERRED   | MEDIUM   | `seed:seedOrganisation` with preset arg (full-15, standard-10, quick-6, advanced-5, basics-5)          |
+
+## Phase 11: Facilitator Dashboard ✅ COMPLETED
+
+| ID   | Task                   | Status       | Priority | Details                                                                                                       |
+| ---- | ---------------------- | ------------ | -------- | ------------------------------------------------------------------------------------------------------------- |
+| 11.1 | Admin page at `/admin` | ✅ COMPLETED | MEDIUM   | `admin.astro` + `AdminDashboard.tsx` React island; password gate checked against `ADMIN_PASSWORD` env var     |
+| 11.2 | Dashboard data queries | ✅ COMPLETED | MEDIUM   | `convex/dashboard.ts`: getActiveSessionCounts, getTaskCompletionStats, getRecentSubmissions; password-gated   |
+| 11.3 | Dashboard UI           | ✅ COMPLETED | MEDIUM   | `AdminDashboardInner.tsx`: 3 tables (sessions, task stats, recent submissions); Latvian labels; logout button |
 
 ---
 

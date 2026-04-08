@@ -38,14 +38,15 @@ beforeEach(() => {
 describe("persistSession", () => {
   test("stores session in localStorage", () => {
     const id = "sessions:abc123" as Id<"sessions">;
-    persistSession(id, "BDA-2026", "p001");
+    const expiresAt = Date.now() + 48 * 60 * 60 * 1000;
+    persistSession(id, "BDA-2026", "p001", expiresAt);
     const raw = localStorageMock.getItem("pwc_session");
     expect(raw).not.toBeNull();
     const parsed = JSON.parse(raw!);
     expect(parsed.sessionId).toBe(id);
     expect(parsed.organisationCode).toBe("BDA-2026");
     expect(parsed.participantCode).toBe("p001");
-    expect(parsed.storedAt).toBeTypeOf("number");
+    expect(parsed.expiresAt).toBe(expiresAt);
   });
 });
 
@@ -57,7 +58,8 @@ describe("loadSession", () => {
 
   test("returns session id when stored", () => {
     const id = "sessions:ghi789" as Id<"sessions">;
-    persistSession(id, "BDA-2026", "p003");
+    const expiresAt = Date.now() + 48 * 60 * 60 * 1000;
+    persistSession(id, "BDA-2026", "p003", expiresAt);
 
     const result = loadSession();
     expect(result).toBe(id);
@@ -71,12 +73,12 @@ describe("loadSession", () => {
 
   test("returns null and clears entry when TTL has expired", () => {
     const id = "sessions:expired1" as Id<"sessions">;
-    // Manually store with a storedAt far in the past (73h ago)
+    // Manually store with expiresAt in the past
     store["pwc_session"] = JSON.stringify({
       sessionId: id,
       organisationCode: "BDA-2026",
       participantCode: "p-old",
-      storedAt: Date.now() - 73 * 60 * 60 * 1000,
+      expiresAt: Date.now() - 1000,
     });
 
     const result = loadSession();
@@ -93,7 +95,8 @@ describe("loadParticipantCode", () => {
 
   test("returns participant code when stored", () => {
     const id = "sessions:jkl012" as Id<"sessions">;
-    persistSession(id, "BDA-2026", "p-special");
+    const expiresAt = Date.now() + 48 * 60 * 60 * 1000;
+    persistSession(id, "BDA-2026", "p-special", expiresAt);
     const result = loadParticipantCode();
     expect(result).toBe("p-special");
   });
@@ -108,7 +111,8 @@ describe("loadParticipantCode", () => {
 describe("clearSession", () => {
   test("removes session from localStorage", () => {
     const id = "sessions:mno345" as Id<"sessions">;
-    persistSession(id, "BDA-2026", "p004");
+    const expiresAt = Date.now() + 48 * 60 * 60 * 1000;
+    persistSession(id, "BDA-2026", "p004", expiresAt);
 
     clearSession();
 
@@ -117,7 +121,8 @@ describe("clearSession", () => {
 
   test("loadSession returns null after clear", () => {
     const id = "sessions:stu901" as Id<"sessions">;
-    persistSession(id, "BDA-2026", "p006");
+    const expiresAt = Date.now() + 48 * 60 * 60 * 1000;
+    persistSession(id, "BDA-2026", "p006", expiresAt);
     clearSession();
     expect(loadSession()).toBeNull();
   });

@@ -2,6 +2,7 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { MS_PER_HOUR } from "./constants";
+import { errorResponseValidator } from "./validators";
 
 // 3.1 — Validate organisation code
 export const validateOrganisation = query({
@@ -45,10 +46,9 @@ export const createOrResumeSession = mutation({
     v.object({
       sessionId: v.id("sessions"),
       status: v.union(v.literal("created"), v.literal("resumed")),
+      expiresAt: v.number(),
     }),
-    v.object({
-      error: v.string(),
-    }),
+    errorResponseValidator,
   ),
   handler: async (ctx, args) => {
     // Look up organisation
@@ -58,7 +58,10 @@ export const createOrResumeSession = mutation({
       .first();
 
     if (!org) {
-      return { error: "Nepareizs organizācijas kods." };
+      return {
+        error: "Nepareizs organizācijas kods.",
+        errorCode: "ORG_INVALID" as const,
+      };
     }
 
     // Check for existing session
@@ -78,12 +81,17 @@ export const createOrResumeSession = mutation({
       if (now > existingSession.expiresAt) {
         return {
           error: "Sesija ir beigusies. Lūdzu, sazinieties ar organizatoru.",
+          errorCode: "SESSION_EXPIRED" as const,
         };
       }
 
       // 3.4 — Update last activity
       await ctx.db.patch(existingSession._id, { lastActiveAt: now });
-      return { sessionId: existingSession._id, status: "resumed" as const };
+      return {
+        sessionId: existingSession._id,
+        status: "resumed" as const,
+        expiresAt: existingSession.expiresAt,
+      };
     }
 
     // Create new session
@@ -98,7 +106,7 @@ export const createOrResumeSession = mutation({
       submissionCount: 0,
     });
 
-    return { sessionId, status: "created" as const };
+    return { sessionId, status: "created" as const, expiresAt };
   },
 });
 

@@ -6,3 +6,8 @@ declare const console: {
   warn(...args: unknown[]): void;
   info(...args: unknown[]): void;
 };
+
+// Convex runtime exposes environment variables via process.env
+declare const process: {
+  env: Record<string, string | undefined>;
+};

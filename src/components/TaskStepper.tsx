@@ -18,7 +18,7 @@ export default function TaskStepper({
   return (
     <nav
       aria-label="Uzdevumu progress"
-      className="overflow-x-auto"
+      className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0"
     >
       <ol className="flex items-center gap-1">
         {summaries.map((task, idx) => {

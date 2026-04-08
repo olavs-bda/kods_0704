@@ -11,6 +11,7 @@
 import type * as cleanup from "../cleanup.js";
 import type * as constants from "../constants.js";
 import type * as crons from "../crons.js";
+import type * as dashboard from "../dashboard.js";
 import type * as dist__generated_api from "../dist/_generated/api.js";
 import type * as dist__generated_server from "../dist/_generated/server.js";
 import type * as dist_dist__generated_api from "../dist/dist/_generated/api.js";
@@ -35,6 +36,7 @@ declare const fullApi: ApiFromModules<{
   cleanup: typeof cleanup;
   constants: typeof constants;
   crons: typeof crons;
+  dashboard: typeof dashboard;
   "dist/_generated/api": typeof dist__generated_api;
   "dist/_generated/server": typeof dist__generated_server;
   "dist/dist/_generated/api": typeof dist_dist__generated_api;
