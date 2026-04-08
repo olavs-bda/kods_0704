@@ -8,8 +8,8 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "test": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test": "vitest",
+    "test:run": "vitest run"
   },
   "dependencies": {
     "@astrojs/react": "^5.0.3",

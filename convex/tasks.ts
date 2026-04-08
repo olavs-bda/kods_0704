@@ -1,6 +1,7 @@
 // convex/tasks.ts
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { SESSION_EXPIRED_ERROR } from "./constants";
 
 const taskValidator = v.object({
   _id: v.id("tasks"),
@@ -61,7 +62,7 @@ export const getCurrentTask = query({
     }
 
     if (Date.now() > session.expiresAt) {
-      return { error: "Sesija ir beigusies." };
+      return { error: SESSION_EXPIRED_ERROR };
     }
 
     const org = await ctx.db.get(session.organisationId);
@@ -113,7 +114,7 @@ export const advanceTask = mutation({
     }
 
     if (Date.now() > session.expiresAt) {
-      return { error: "Sesija ir beigusies." };
+      return { error: SESSION_EXPIRED_ERROR };
     }
 
     const org = await ctx.db.get(session.organisationId);

@@ -1,10 +1,19 @@
 // convex/_generated/server.ts
-// Generated utilities for implementing server-side Convex query and mutation functions.
+/* prettier-ignore */
+/**
+ * Generated utilities for implementing server-side Convex query and mutation functions.
+ *
+ * THIS CODE IS AUTOMATICALLY GENERATED.
+ *
+ * To regenerate, run `npx convex dev`.
+ * @module
+ */
+
 import {
   actionGeneric,
   httpActionGeneric,
-  queryGeneric,
   mutationGeneric,
+  queryGeneric,
   internalActionGeneric,
   internalMutationGeneric,
   internalQueryGeneric,
@@ -23,14 +32,11 @@ import type {
 import type { DataModel } from "./dataModel.js";
 
 export const query: QueryBuilder<DataModel, "public"> = queryGeneric;
-export const internalQuery: QueryBuilder<DataModel, "internal"> =
-  internalQueryGeneric;
 export const mutation: MutationBuilder<DataModel, "public"> = mutationGeneric;
-export const internalMutation: MutationBuilder<DataModel, "internal"> =
-  internalMutationGeneric;
 export const action: ActionBuilder<DataModel, "public"> = actionGeneric;
-export const internalAction: ActionBuilder<DataModel, "internal"> =
-  internalActionGeneric;
+export const internalQuery: QueryBuilder<DataModel, "internal"> = internalQueryGeneric;
+export const internalMutation: MutationBuilder<DataModel, "internal"> = internalMutationGeneric;
+export const internalAction: ActionBuilder<DataModel, "internal"> = internalActionGeneric;
 export const httpAction: HttpActionBuilder = httpActionGeneric;
 
 export type QueryCtx = GenericQueryCtx<DataModel>;
