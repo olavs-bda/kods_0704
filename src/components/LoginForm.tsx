@@ -46,7 +46,8 @@ export default function LoginForm({
 
       persistSession(result.sessionId, trimmedOrg, trimmedParticipant);
       window.location.href = "/task";
-    } catch {
+    } catch (err: unknown) {
+      console.error("Login failed:", err);
       setError("Radās neparedzēta kļūda. Lūdzu, mēģiniet vēlreiz.");
     } finally {
       setLoading(false);

@@ -126,7 +126,8 @@ function TaskView({ sessionId }: { sessionId: Id<"sessions"> }) {
       } else {
         setLatestFeedback(result.feedback);
       }
-    } catch {
+    } catch (err: unknown) {
+      console.error("Prompt submission failed:", err);
       setError("Radās kļūda. Lūdzu, mēģiniet vēlreiz.");
     } finally {
       setSubmitting(false);
@@ -140,7 +141,8 @@ function TaskView({ sessionId }: { sessionId: Id<"sessions"> }) {
       if ("error" in result) {
         setError(result.error ?? "Nezināma kļūda.");
       }
-    } catch {
+    } catch (err: unknown) {
+      console.error("Task advance failed:", err);
       setError("Neizdevās pāriet uz nākamo uzdevumu.");
     } finally {
       setAdvancing(false);

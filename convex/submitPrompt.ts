@@ -7,6 +7,12 @@ import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import OpenAI from "openai";
 import { feedbackValidator } from "./submissions";
+import {
+  AI_MODEL,
+  AI_TEMPERATURE,
+  AI_TIMEOUT_MS,
+  AI_MAX_RETRIES,
+} from "./constants";
 
 type Feedback = {
   strengths_lv: string;
@@ -74,12 +80,15 @@ export const submitPrompt = action({
     const systemPrompt = buildSystemPrompt(task.level);
     const userPrompt = buildUserPrompt(args.prompt, task);
 
-    const openai = new OpenAI({ timeout: 30_000, maxRetries: 1 });
+    const openai = new OpenAI({
+      timeout: AI_TIMEOUT_MS,
+      maxRetries: AI_MAX_RETRIES,
+    });
     let feedback: Feedback;
     try {
       const response = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        temperature: 0.7,
+        model: AI_MODEL,
+        temperature: AI_TEMPERATURE,
         response_format: { type: "json_object" },
         messages: [
           { role: "system", content: systemPrompt },

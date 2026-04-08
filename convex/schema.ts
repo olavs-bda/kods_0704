@@ -51,5 +51,7 @@ export default defineSchema({
         nextStep_lv: v.string(),
       }),
     ),
-  }).index("by_sessionId", ["sessionId"]),
+  })
+    .index("by_sessionId", ["sessionId"])
+    .index("by_sessionId_and_taskId", ["sessionId", "taskId"]),
 });

@@ -124,17 +124,17 @@ export const getTaskSubmissions = query({
   handler: async (ctx, args) => {
     const submissions = await ctx.db
       .query("submissions")
-      .withIndex("by_sessionId", (q) => q.eq("sessionId", args.sessionId))
+      .withIndex("by_sessionId_and_taskId", (q) =>
+        q.eq("sessionId", args.sessionId).eq("taskId", args.taskId),
+      )
       .order("desc")
       .collect();
 
-    return submissions
-      .filter((s) => s.taskId === args.taskId)
-      .map((s) => ({
-        _id: s._id,
-        prompt: s.prompt,
-        createdAt: s.createdAt,
-        feedback: s.feedback,
-      }));
+    return submissions.map((s) => ({
+      _id: s._id,
+      prompt: s.prompt,
+      createdAt: s.createdAt,
+      feedback: s.feedback,
+    }));
   },
 });

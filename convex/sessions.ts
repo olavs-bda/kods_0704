@@ -1,6 +1,7 @@
 // convex/sessions.ts
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { MS_PER_HOUR } from "./constants";
 
 // 3.1 — Validate organisation code
 export const validateOrganisation = query({
@@ -86,7 +87,7 @@ export const createOrResumeSession = mutation({
     }
 
     // Create new session
-    const expiresAt = now + org.settings.sessionExpiryHours * 60 * 60 * 1000;
+    const expiresAt = now + org.settings.sessionExpiryHours * MS_PER_HOUR;
     const sessionId = await ctx.db.insert("sessions", {
       organisationId: org._id,
       participantCode: args.participantCode,

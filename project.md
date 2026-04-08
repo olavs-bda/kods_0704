@@ -87,7 +87,7 @@ OpenAI API
   _id,
   code,
   name,
-  taskSetId,
+  taskIds: [Id<"tasks">],
   settings: {
     sessionExpiryHours,
     maxSubmissionsPerUser
@@ -110,30 +110,19 @@ OpenAI API
 }
 ```
 
-#### TaskSets
+#### Tasks
 
 ```
 {
   _id,
-  name,
-  tasks: Task[]
-}
-```
-
-#### Task
-
-```
-{
-  id,
+  slug,
   title_lv,
   instruction_lv,
   context_lv,
   expectedOutput,
   level,
-  assistance: {
-    hints_lv,
-    example_lv
-  }
+  hints_lv?,
+  example_lv?
 }
 ```
 
@@ -185,20 +174,15 @@ OpenAI API
 
 ### OpenAI Integration
 
-#### Prompt Template (EN)
+- Model: `gpt-4o-mini` (configurable via `convex/constants.ts`)
+- System prompt: level-aware coaching instructions, all feedback in Latvian
+- User prompt: includes task title, instruction, context, expected output, and difficulty level
+- Response format: JSON with five required fields
+- See `convex/submitPrompt.ts` for prompt templates (`buildSystemPrompt`, `buildUserPrompt`)
 
-```
-You are an expert prompt engineering coach.
+#### Feedback JSON shape
 
-User prompt:
-"{user_input}"
-
-Context:
-- Audience: Latvian public sector employee
-- Task type: {task.expectedOutput}
-- Assistance level: {level}
-
-Return JSON:
+```json
 {
   "strengths_lv": "...",
   "weaknesses_lv": "...",

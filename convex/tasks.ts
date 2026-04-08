@@ -1,5 +1,7 @@
 // convex/tasks.ts
 import { query, mutation } from "./_generated/server";
+import type { QueryCtx, MutationCtx } from "./_generated/server";
+import type { Doc } from "./_generated/dataModel";
 import { v } from "convex/values";
 import { SESSION_EXPIRED_ERROR } from "./constants";
 
@@ -16,7 +18,7 @@ const taskValidator = v.object({
 });
 
 // Helper: strip system fields from task document
-function pickTaskFields(task: any) {
+function pickTaskFields(task: Doc<"tasks">) {
   return {
     _id: task._id,
     slug: task.slug,
@@ -32,8 +34,8 @@ function pickTaskFields(task: any) {
 
 // Helper: resolve ordered tasks for an organisation
 async function resolveOrgTasks(
-  ctx: { db: { get: (id: any) => Promise<any> } },
-  org: { taskIds: string[] },
+  ctx: QueryCtx | MutationCtx,
+  org: Doc<"organisations">,
 ) {
   const tasks = [];
   for (const taskId of org.taskIds) {
@@ -149,18 +151,7 @@ export const getFirstTask = query({
   handler: async (ctx) => {
     const task = await ctx.db.query("tasks").first();
     if (!task) return null;
-
-    return {
-      _id: task._id,
-      slug: task.slug,
-      title_lv: task.title_lv,
-      instruction_lv: task.instruction_lv,
-      context_lv: task.context_lv,
-      expectedOutput: task.expectedOutput,
-      level: task.level,
-      hints_lv: task.hints_lv,
-      example_lv: task.example_lv,
-    };
+    return pickTaskFields(task);
   },
 });
 
