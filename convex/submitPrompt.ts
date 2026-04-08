@@ -6,14 +6,7 @@ import { action } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 import OpenAI from "openai";
-
-const feedbackValidator = v.object({
-  strengths_lv: v.string(),
-  weaknesses_lv: v.string(),
-  improvedPrompt_lv: v.string(),
-  explanation_lv: v.string(),
-  nextStep_lv: v.string(),
-});
+import { feedbackValidator } from "./submissions";
 
 type Feedback = {
   strengths_lv: string;
@@ -104,7 +97,8 @@ export const submitPrompt = action({
         return { error: "AI atbilde nav derīga. Lūdzu, mēģiniet vēlreiz." };
       }
       feedback = parsed;
-    } catch {
+    } catch (err) {
+      console.error("OpenAI call failed:", err);
       return { error: "Kļūda sazinoties ar AI. Lūdzu, mēģiniet vēlreiz." };
     }
 

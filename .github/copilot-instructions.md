@@ -30,6 +30,8 @@ Prompt Workshop Coach — a workshop-scoped web app for structured prompt-writin
 - Use brief comments to preserve non-obvious context, assumptions, invariants, or cross-file coupling when that context would otherwise be easy to lose
 - Avoid comment bloat: no line-by-line narration, and prefer short boundary comments over frequent inline commentary
 - No `any` types — use strict TypeScript throughout
+- **Single source of truth** — define shared validators, types, and constants once and import; never duplicate across files
+- **Always log errors** — `catch` blocks must `console.error` before returning user-facing messages; never swallow errors silently
 
 ## Convex Rules
 
@@ -71,6 +73,7 @@ Prompt Workshop Coach — a workshop-scoped web app for structured prompt-writin
 - Validate all mutation inputs with Convex validators (`v.*`)
 - All user-facing feedback text in Latvian
 - OpenAI calls via Convex actions (never expose API keys to client)
+- `ConvexReactClient` is created in `ConvexClientProvider.tsx` — do not create additional client instances
 
 ## Build & Test
 

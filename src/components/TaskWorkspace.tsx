@@ -1,5 +1,5 @@
 // src/components/TaskWorkspace.tsx
-// Main workspace: task display, prompt input, feedback, progression, history
+// Main workspace: orchestrates task display, prompt input, feedback, progression
 import { useState, useEffect, type FormEvent } from "react";
 import { useQuery, useAction, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
@@ -12,6 +12,8 @@ import {
 import FeedbackDisplay from "./FeedbackDisplay";
 import SubmissionHistory from "./SubmissionHistory";
 import TaskStepper from "./TaskStepper";
+import TaskDisplay from "./TaskDisplay";
+import PromptForm, { SubmittingIndicator } from "./PromptForm";
 
 interface Feedback {
   strengths_lv: string;
@@ -171,80 +173,20 @@ function TaskView({ sessionId }: { sessionId: Id<"sessions"> }) {
         </div>
       </div>
 
-      {/* Task Display (7.1) */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-        <h2 className="text-lg font-bold text-gray-900">{task.title_lv}</h2>
-        <p className="mt-3 text-sm leading-relaxed text-gray-700">
-          {task.instruction_lv}
-        </p>
+      <TaskDisplay task={task} />
 
-        {task.context_lv && (
-          <div className="mt-4 rounded-lg bg-gray-50 p-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-              Konteksts
-            </p>
-            <p className="mt-1 text-sm text-gray-700">{task.context_lv}</p>
-          </div>
-        )}
-
-        {task.hints_lv && (
-          <details className="mt-3 rounded-lg bg-amber-50">
-            <summary className="cursor-pointer select-none p-4 text-xs font-semibold uppercase tracking-wide text-amber-600 hover:text-amber-700">
-              Padoms (klikšķiniet, lai atklātu)
-            </summary>
-            <p className="px-4 pb-4 text-sm text-amber-800">{task.hints_lv}</p>
-          </details>
-        )}
-      </div>
-
-      {/* Prompt Input (7.2) */}
-      <form
+      <PromptForm
+        prompt={prompt}
+        onPromptChange={setPrompt}
         onSubmit={handleSubmit}
-        className="space-y-3"
-      >
-        <div>
-          <label
-            htmlFor="prompt"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Jūsu prompts
-          </label>
-          <textarea
-            id="prompt"
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            rows={5}
-            placeholder="Ierakstiet savu promptu šeit..."
-            disabled={submitting}
-            className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-3 text-sm shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:bg-gray-50 disabled:text-gray-400"
-          />
-          <div className="mt-1 text-right text-xs text-gray-400">
-            {prompt.length} rakstzīmes
-          </div>
-        </div>
+        submitting={submitting}
+        error={error}
+      />
 
-        {error && (
-          <div
-            role="alert"
-            className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
-          >
-            {error}
-          </div>
-        )}
-
-        <button
-          type="submit"
-          disabled={submitting || !prompt.trim()}
-          className="w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {submitting ? "Notiek analīze..." : "Iesniegt promptu"}
-        </button>
-      </form>
-
-      {/* Loading State (7.4) */}
+      {/* Loading State */}
       {submitting && <SubmittingIndicator />}
 
-      {/* Feedback Display (7.3) */}
+      {/* Feedback Display */}
       {latestFeedback && <FeedbackDisplay feedback={latestFeedback} />}
 
       {/* Next Task Button (7.5) */}
@@ -284,35 +226,6 @@ function LoadingSkeleton() {
         <div className="h-4 w-5/6 rounded bg-gray-200" />
       </div>
       <div className="h-32 rounded-lg bg-gray-200" />
-    </div>
-  );
-}
-
-function SubmittingIndicator() {
-  return (
-    <div className="flex items-center justify-center gap-3 rounded-xl border border-blue-100 bg-blue-50 p-6">
-      <svg
-        className="h-5 w-5 animate-spin text-blue-600"
-        viewBox="0 0 24 24"
-        fill="none"
-      >
-        <circle
-          className="opacity-25"
-          cx="12"
-          cy="12"
-          r="10"
-          stroke="currentColor"
-          strokeWidth="4"
-        />
-        <path
-          className="opacity-75"
-          fill="currentColor"
-          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-        />
-      </svg>
-      <p className="text-sm font-medium text-blue-700">
-        AI analizē jūsu promptu...
-      </p>
     </div>
   );
 }
