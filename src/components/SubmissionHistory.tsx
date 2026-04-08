@@ -23,7 +23,7 @@ export default function SubmissionHistory({
 
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-semibold text-gray-700">
+      <h3 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">
         Iepriekšējie mēģinājumi ({submissions.length})
       </h3>
 
@@ -39,25 +39,27 @@ export default function SubmissionHistory({
           return (
             <div
               key={sub._id}
-              className="rounded-lg border border-gray-200 bg-white"
+              className="rounded-2xl bg-surface-container-low overflow-hidden"
             >
               <button
                 onClick={() => setExpandedId(isExpanded ? null : sub._id)}
-                className="flex w-full items-center justify-between px-4 py-3 text-left text-sm hover:bg-gray-50"
+                className="flex w-full items-center justify-between px-4 py-3 text-left text-sm hover:bg-surface-container transition-colors"
               >
-                <span className="font-medium text-gray-700">
+                <span className="font-medium text-on-surface">
                   #{submissions.length - idx} — {timeStr}
                 </span>
-                <span className="text-gray-400">{isExpanded ? "▲" : "▼"}</span>
+                <span className="text-outline text-xs">
+                  {isExpanded ? "▲" : "▼"}
+                </span>
               </button>
 
               {isExpanded && (
-                <div className="space-y-3 border-t border-gray-100 px-4 py-3">
+                <div className="space-y-3 px-4 py-3 bg-surface-container-lowest rounded-b-2xl">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">
                       Jūsu prompts
                     </p>
-                    <p className="mt-1 whitespace-pre-wrap text-sm text-gray-800">
+                    <p className="mt-1 whitespace-pre-wrap text-sm text-on-surface">
                       {sub.prompt}
                     </p>
                   </div>

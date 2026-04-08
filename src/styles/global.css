@@ -1,1 +1,112 @@
 @import "tailwindcss";
+
+@theme {
+  /* ── Color tokens (Civic Clarity Framework) ── */
+  --color-primary: #0c5fae;
+  --color-on-primary: #f6f7ff;
+  --color-primary-container: #d5e3ff;
+  --color-on-primary-container: #00529a;
+  --color-primary-fixed: #d5e3ff;
+  --color-primary-fixed-dim: #bed6ff;
+  --color-primary-dim: #00539b;
+  --color-inverse-primary: #68a5f9;
+  --color-on-primary-fixed: #003f7a;
+  --color-on-primary-fixed-variant: #025cab;
+
+  --color-secondary: #1c6d25;
+  --color-on-secondary: #eaffe2;
+  --color-secondary-container: #a3f69c;
+  --color-on-secondary-container: #065f18;
+  --color-secondary-fixed: #a3f69c;
+  --color-secondary-fixed-dim: #95e88f;
+  --color-secondary-dim: #096119;
+  --color-on-secondary-fixed: #004b0f;
+  --color-on-secondary-fixed-variant: #176a21;
+
+  --color-tertiary: #974a00;
+  --color-on-tertiary: #fff7f4;
+  --color-tertiary-container: #f97f06;
+  --color-on-tertiary-container: #3b1900;
+  --color-tertiary-fixed: #f97f06;
+  --color-tertiary-fixed-dim: #e67400;
+  --color-tertiary-dim: #854000;
+  --color-on-tertiary-fixed: #000000;
+  --color-on-tertiary-fixed-variant: #4a2100;
+
+  --color-error: #9f403d;
+  --color-on-error: #fff7f6;
+  --color-error-container: #fe8983;
+  --color-on-error-container: #752121;
+  --color-error-dim: #4e0309;
+
+  --color-surface: #f8f9fa;
+  --color-on-surface: #2b3437;
+  --color-surface-variant: #dbe4e7;
+  --color-on-surface-variant: #586064;
+  --color-surface-bright: #f8f9fa;
+  --color-surface-dim: #d1dce0;
+  --color-surface-tint: #0c0fae;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f1f4f6;
+  --color-surface-container: #eaeff1;
+  --color-surface-container-high: #e3e9ec;
+  --color-surface-container-highest: #dbe4e7;
+
+  --color-background: #f8f9fa;
+  --color-on-background: #2b3437;
+
+  --color-outline: #737c7f;
+  --color-outline-variant: #abb3b7;
+
+  --color-inverse-surface: #0c0f10;
+  --color-inverse-on-surface: #9b9d9e;
+
+  /* ── Typography ── */
+  --font-headline: "Public Sans", sans-serif;
+  --font-body: "Manrope", sans-serif;
+  --font-label: "Manrope", sans-serif;
+
+  /* ── Border radius ── */
+  --radius-DEFAULT: 0.25rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-full: 9999px;
+}
+
+@keyframes pulse-soft {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(0.98);
+  }
+}
+
+@keyframes rotate-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 3s ease-in-out infinite;
+}
+.animate-rotate-slow {
+  animation: rotate-slow 12s linear infinite;
+}
+
+body {
+  font-family: "Manrope", sans-serif;
+}
+h1,
+h2,
+h3 {
+  font-family: "Public Sans", sans-serif;
+}

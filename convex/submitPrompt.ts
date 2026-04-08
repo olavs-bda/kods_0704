@@ -74,7 +74,7 @@ export const submitPrompt = action({
     const systemPrompt = buildSystemPrompt(task.level);
     const userPrompt = buildUserPrompt(args.prompt, task);
 
-    const openai = new OpenAI();
+    const openai = new OpenAI({ timeout: 30_000, maxRetries: 1 });
     let feedback: Feedback;
     try {
       const response = await openai.chat.completions.create({
@@ -89,17 +89,19 @@ export const submitPrompt = action({
 
       const content = response.choices[0]?.message?.content;
       if (!content) {
+        console.error("OpenAI returned empty content");
         return { error: "AI neatbildēja. Lūdzu, mēģiniet vēlreiz." };
       }
 
       const parsed = parseFeedback(content);
       if (!parsed) {
+        console.error("OpenAI returned malformed feedback:", content);
         return { error: "AI atbilde nav derīga. Lūdzu, mēģiniet vēlreiz." };
       }
       feedback = parsed;
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("OpenAI call failed:", err);
-      return { error: "Kļūda sazinoties ar AI. Lūdzu, mēģiniet vēlreiz." };
+      return { error: classifyOpenAIError(err) };
     }
 
     // Store submission and increment count
@@ -193,4 +195,28 @@ export function parseFeedback(content: string): Feedback | null {
   } catch {
     return null;
   }
+}
+
+// 8.4 — Classify OpenAI errors into user-friendly Latvian messages
+export function classifyOpenAIError(err: unknown): string {
+  if (err instanceof OpenAI.APIConnectionError) {
+    return "Neizdevās savienoties ar AI serveri. Lūdzu, mēģiniet vēlreiz.";
+  }
+  if (err instanceof OpenAI.RateLimitError) {
+    return "AI serveris ir pārslogots. Lūdzu, uzgaidiet un mēģiniet vēlreiz.";
+  }
+  if (err instanceof OpenAI.AuthenticationError) {
+    return "AI konfigurācijas kļūda. Lūdzu, sazinieties ar organizatoru.";
+  }
+  if (err instanceof OpenAI.APIError) {
+    if (err.status && err.status >= 500) {
+      return "AI serveris īslaicīgi nav pieejams. Lūdzu, mēģiniet vēlreiz.";
+    }
+    return "Kļūda sazinoties ar AI. Lūdzu, mēģiniet vēlreiz.";
+  }
+  // Timeout or generic network error
+  if (err instanceof Error && err.message.toLowerCase().includes("timeout")) {
+    return "AI atbilde aizkavējās. Lūdzu, mēģiniet vēlreiz.";
+  }
+  return "Kļūda sazinoties ar AI. Lūdzu, mēģiniet vēlreiz.";
 }

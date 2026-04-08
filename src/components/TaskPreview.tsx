@@ -16,15 +16,15 @@ export default function TaskPreview({ ready }: { ready?: boolean }) {
       aria-hidden={!ready}
     >
       <div className="mb-3 flex items-center gap-2">
-        <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
+        <span className="rounded-full bg-primary-container px-3 py-1 text-xs font-bold text-on-primary-container">
           1. uzdevums
         </span>
-        <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
+        <span className="rounded-full bg-surface-container-high px-3 py-1 text-xs font-medium text-on-surface-variant">
           Līmenis: {task.level}
         </span>
       </div>
-      <h3 className="text-lg font-bold text-gray-900">{task.title_lv}</h3>
-      <p className="mt-2 text-sm leading-relaxed text-gray-700">
+      <h3 className="text-lg font-bold text-on-surface">{task.title_lv}</h3>
+      <p className="mt-2 text-sm leading-relaxed text-on-surface-variant">
         {task.instruction_lv}
       </p>
     </div>

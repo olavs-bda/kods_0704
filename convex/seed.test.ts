@@ -12,12 +12,14 @@ describe("seedData", () => {
 
     await t.mutation(internal.seed.seedData, {});
 
-    // Verify both organisations were created
-    const orgs = await t.run(async (ctx) => ctx.db.query("organisations").collect());
-    expect(orgs.length).toBe(2);
+    // Verify organisation was created
+    const orgs = await t.run(async (ctx) =>
+      ctx.db.query("organisations").collect(),
+    );
+    expect(orgs.length).toBe(1);
 
-    const codes = orgs.map((o) => o.code).sort();
-    expect(codes).toEqual(["BDA-2026", "SAEIMA100426"]);
+    const codes = orgs.map((o) => o.code);
+    expect(codes).toEqual(["BDA-2026"]);
 
     // Verify tasks were created
     const tasks = await t.run(async (ctx) => ctx.db.query("tasks").collect());
@@ -37,9 +39,11 @@ describe("seedData", () => {
     await t.mutation(internal.seed.seedData, {});
     await t.mutation(internal.seed.seedData, {});
 
-    // Should still only have 2 organisations and 6 tasks
-    const orgs = await t.run(async (ctx) => ctx.db.query("organisations").collect());
-    expect(orgs.length).toBe(2);
+    // Should still only have 1 organisation and 6 tasks
+    const orgs = await t.run(async (ctx) =>
+      ctx.db.query("organisations").collect(),
+    );
+    expect(orgs.length).toBe(1);
 
     const tasks = await t.run(async (ctx) => ctx.db.query("tasks").collect());
     expect(tasks.length).toBe(6);
@@ -51,9 +55,14 @@ describe("seedData", () => {
 
     const tasks = await t.run(async (ctx) => ctx.db.query("tasks").collect());
     const slugs = tasks.map((t) => t.slug).sort();
-    expect(slugs).toEqual(
-      ["task-1-1", "task-1-2", "task-2-1", "task-2-2", "task-3-1", "task-3-2"],
-    );
+    expect(slugs).toEqual([
+      "task-1-1",
+      "task-1-2",
+      "task-2-1",
+      "task-2-2",
+      "task-3-1",
+      "task-3-2",
+    ]);
 
     const levels = tasks.map((t) => t.level).sort();
     expect(levels).toEqual([1, 1, 2, 2, 3, 3]);

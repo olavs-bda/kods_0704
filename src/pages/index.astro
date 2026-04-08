@@ -5,11 +5,19 @@ import LoginPage from "../components/LoginPage";
 ---
 
 <Layout title="Prompt Workshop Coach">
-  <main class="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center px-4 py-12">
-    <div class="w-full space-y-6">
-      <div class="text-center">
-        <h1 class="text-2xl font-bold text-gray-900">Prompt Workshop Coach</h1>
-        <p class="mt-2 text-sm text-gray-500">
+  {/* Atmospheric background blobs */}
+  <div class="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-150 bg-primary-container/20 rounded-full blur-[120px] animate-pulse-soft"></div>
+    <div class="absolute top-1/4 left-1/3 w-96 h-96 bg-secondary-container/10 rounded-full blur-[100px]"></div>
+  </div>
+
+  <main class="relative z-10 flex flex-1 flex-col items-center justify-center px-4 py-12">
+    <div class="w-full max-w-md space-y-8">
+      <div class="text-center space-y-2">
+        <h1 class="text-4xl font-extrabold tracking-tight text-on-surface leading-tight">
+          Darbs ar AI
+        </h1>
+        <p class="text-on-surface-variant font-body text-base">
           Ievadiet savus kodus, lai sāktu darbnīcu
         </p>
       </div>
@@ -17,4 +25,17 @@ import LoginPage from "../components/LoginPage";
       <LoginPage client:only="react" />
     </div>
   </main>
+
+  {/* Footer tip */}
+  <footer class="relative z-10 p-8 flex justify-center">
+    <div class="bg-surface-container-low/50 backdrop-blur-sm px-6 py-4 rounded-2xl max-w-xl flex items-start gap-4">
+      <span class="material-symbols-outlined text-tertiary-fixed mt-1">lightbulb</span>
+      <div>
+        <span class="block text-xs font-bold uppercase tracking-widest text-tertiary-dim mb-1">Padoms</span>
+        <p class="text-sm text-on-surface-variant leading-relaxed italic">
+          "Skaidrs un specifisks prompts ir panākumu atslēga. Izvairieties no vispārinājumiem, lai saņemtu precīzāku rezultātu."
+        </p>
+      </div>
+    </div>
+  </footer>
 </Layout>

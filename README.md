@@ -66,8 +66,8 @@ npx convex run --no-push seed:seedData
 
 This creates:
 
-- **2 organisations**: `BDA-2026` and `Saeima100426`
-- **1 task set**: 6 prompt engineering exercises (2 per level, levels 1–3)
+- **1 organisation**: `BDA-2026`
+- **6 tasks**: prompt engineering exercises (2 per level, levels 1–3)
 - **Settings**: 48h session expiry, 50 submissions/user
 
 ### Commands

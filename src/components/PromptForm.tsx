@@ -25,7 +25,7 @@ export default function PromptForm({
       <div>
         <label
           htmlFor="prompt"
-          className="block text-sm font-medium text-gray-700"
+          className="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-1"
         >
           Jūsu prompts
         </label>
@@ -36,9 +36,9 @@ export default function PromptForm({
           rows={5}
           placeholder="Ierakstiet savu promptu šeit..."
           disabled={submitting}
-          className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-3 text-sm shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:bg-gray-50 disabled:text-gray-400"
+          className="block w-full rounded-xl bg-surface-container-highest border-0 px-4 py-3 text-sm text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:text-outline transition-colors resize-none"
         />
-        <div className="mt-1 text-right text-xs text-gray-400">
+        <div className="mt-1 text-right text-xs text-outline">
           {prompt.length} rakstzīmes
         </div>
       </div>
@@ -46,7 +46,7 @@ export default function PromptForm({
       {error && (
         <div
           role="alert"
-          className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+          className="rounded-xl bg-error-container px-4 py-3 text-sm text-on-error-container"
         >
           {error}
         </div>
@@ -55,7 +55,7 @@ export default function PromptForm({
       <button
         type="submit"
         disabled={submitting || !prompt.trim()}
-        className="w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+        className="w-full rounded-full bg-primary px-4 py-3 text-sm font-semibold text-on-primary shadow-[0_4px_16px_rgba(12,95,174,0.25)] hover:shadow-[0_6px_20px_rgba(12,95,174,0.35)] hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-50 transition-all"
       >
         {submitting ? "Notiek analīze..." : "Iesniegt promptu"}
       </button>
@@ -65,29 +65,80 @@ export default function PromptForm({
 
 export function SubmittingIndicator() {
   return (
-    <div className="flex items-center justify-center gap-3 rounded-xl border border-blue-100 bg-blue-50 p-6">
-      <svg
-        className="h-5 w-5 animate-spin text-blue-600"
-        viewBox="0 0 24 24"
-        fill="none"
-      >
-        <circle
-          className="opacity-25"
-          cx="12"
-          cy="12"
-          r="10"
-          stroke="currentColor"
-          strokeWidth="4"
-        />
-        <path
-          className="opacity-75"
-          fill="currentColor"
-          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-        />
-      </svg>
-      <p className="text-sm font-medium text-blue-700">
-        AI analizē jūsu promptu...
-      </p>
+    <div className="relative overflow-hidden rounded-2xl bg-surface-container-lowest shadow-[0_12px_32px_rgba(43,52,55,0.06)] p-8 flex flex-col items-center text-center">
+      {/* Atmospheric blob */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-primary-container/20 rounded-full blur-[80px] animate-pulse-soft pointer-events-none" />
+
+      {/* Rotating ring + central icon */}
+      <div className="relative mb-8 flex items-center justify-center z-10">
+        <div className="absolute w-32 h-32 border-[0.5px] border-outline-variant/30 rounded-full animate-rotate-slow">
+          <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-primary rounded-full shadow-[0_0_12px_rgba(12,95,174,0.4)]" />
+        </div>
+        <div className="w-20 h-20 bg-surface-container-lowest rounded-full shadow-[0_12px_32px_rgba(43,52,55,0.06)] flex items-center justify-center relative overflow-hidden">
+          <div className="absolute inset-0 bg-linear-to-tr from-primary/5 to-transparent" />
+          <span
+            className="material-symbols-outlined text-primary text-4xl animate-pulse"
+            style={{ fontVariationSettings: "'FILL' 1" }}
+          >
+            model_training
+          </span>
+        </div>
+      </div>
+
+      <div className="space-y-3 animate-pulse-soft z-10">
+        <h3 className="text-xl font-extrabold tracking-tight text-on-surface">
+          Analizējam jūsu ievadi...
+        </h3>
+        <p className="text-on-surface-variant text-sm max-w-xs mx-auto">
+          Mūsu algoritmi pārskata promptu, lai nodrošinātu atbilstību valsts
+          pārvaldes standartiem.
+        </p>
+      </div>
+
+      {/* Progress indicators */}
+      <div className="mt-8 w-full space-y-4 z-10">
+        <div className="flex flex-col gap-2">
+          <div className="flex justify-between text-xs font-bold text-on-surface-variant px-1 uppercase tracking-wider">
+            <span>Lingvistikas pārbaude</span>
+            <span className="text-primary">Aktīvs</span>
+          </div>
+          <div className="h-1.5 w-full bg-surface-container-high rounded-full overflow-hidden">
+            <div className="h-full bg-primary rounded-full w-2/3 transition-all duration-1000" />
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="bg-surface-container-low p-3 rounded-xl flex flex-col items-center gap-1.5">
+            <span
+              className="material-symbols-outlined text-secondary text-xl"
+              style={{ fontVariationSettings: "'FILL' 1" }}
+            >
+              verified_user
+            </span>
+            <span className="text-[9px] font-bold uppercase tracking-widest text-on-surface-variant">
+              Drošība
+            </span>
+          </div>
+          <div className="bg-surface-container-lowest p-3 rounded-xl flex flex-col items-center gap-1.5 ring-1 ring-primary/10">
+            <span
+              className="material-symbols-outlined text-primary text-xl animate-spin"
+              style={{ animationDuration: "3s" }}
+            >
+              sync
+            </span>
+            <span className="text-[9px] font-bold uppercase tracking-widest text-primary">
+              Sintakse
+            </span>
+          </div>
+          <div className="bg-surface-container-low p-3 rounded-xl flex flex-col items-center gap-1.5 opacity-50">
+            <span className="material-symbols-outlined text-on-surface-variant text-xl">
+              psychology
+            </span>
+            <span className="text-[9px] font-bold uppercase tracking-widest text-on-surface-variant">
+              Konteksts
+            </span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

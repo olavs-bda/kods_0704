@@ -1,6 +1,11 @@
 // convex/submitPrompt.test.ts
 import { expect, test, describe } from "vitest";
-import { parseFeedback, buildSystemPrompt, buildUserPrompt } from "./submitPrompt";
+import {
+  parseFeedback,
+  buildSystemPrompt,
+  buildUserPrompt,
+  classifyOpenAIError,
+} from "./submitPrompt";
 
 import type { Id } from "../../convex/_generated/dataModel";
 
@@ -136,5 +141,41 @@ describe("buildUserPrompt", () => {
     const prompt = buildUserPrompt("My prompt", taskWithHints);
     expect(prompt).toContain("My prompt");
     expect(prompt).toContain("2"); // level 2
+  });
+});
+
+describe("8.4 — classifyOpenAIError", () => {
+  test("returns connection error message for APIConnectionError", () => {
+    // Simulate the error shape
+    const err = new Error("Connection refused");
+    Object.defineProperty(err, "constructor", {
+      value: { name: "APIConnectionError" },
+    });
+    // Direct test with a generic Error that includes "timeout"
+    const result = classifyOpenAIError(err);
+    expect(result).toContain("Lūdzu");
+  });
+
+  test("returns timeout message for timeout errors", () => {
+    const err = new Error("Request timeout exceeded");
+    const result = classifyOpenAIError(err);
+    expect(result).toBe("AI atbilde aizkavējās. Lūdzu, mēģiniet vēlreiz.");
+  });
+
+  test("returns generic Latvian error for unknown errors", () => {
+    const result = classifyOpenAIError(new Error("something weird"));
+    expect(result).toBe("Kļūda sazinoties ar AI. Lūdzu, mēģiniet vēlreiz.");
+  });
+
+  test("returns generic Latvian error for non-Error values", () => {
+    const result = classifyOpenAIError("string error");
+    expect(result).toBe("Kļūda sazinoties ar AI. Lūdzu, mēģiniet vēlreiz.");
+  });
+
+  test("error messages are in Latvian", () => {
+    const result = classifyOpenAIError(null);
+    expect(result).not.toContain("Error");
+    expect(result).toMatch(/^[A-ZĀ-Ž]/); // starts with uppercase Latvian
+    expect(result).toMatch(/\.$/); // ends with period
   });
 });

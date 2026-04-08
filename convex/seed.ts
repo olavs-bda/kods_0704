@@ -116,18 +116,7 @@ export const seedData = internalMutation({
       },
     });
 
-    // Create Saeima100426 organisation (shares same tasks)
-    await ctx.db.insert("organisations", {
-      code: "SAEIMA100426",
-      name: "Saeima Darbnīca",
-      taskIds: allTaskIds,
-      settings: {
-        sessionExpiryHours: 48,
-        maxSubmissionsPerUser: 50,
-      },
-    });
-
-    console.log("Seed data created: 2 organisations, 6 tasks.");
+    console.log("Seed data created: 1 organisation, 6 tasks.");
     return null;
   },
 });

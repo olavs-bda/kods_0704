@@ -32,34 +32,25 @@ export default function TaskStepper({
             >
               {idx > 0 && (
                 <div
-                  className={`mx-1 h-0.5 w-4 sm:w-6 ${
-                    isCompleted ? "bg-blue-500" : "bg-gray-200"
+                  className={`mx-1 h-0.5 w-4 sm:w-6 rounded-full ${
+                    isCompleted ? "bg-primary" : "bg-surface-container-high"
                   }`}
                 />
               )}
               <div
-                className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-colors ${
-                  isCompleted ? "bg-blue-500 text-white"
+                className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-all ${
+                  isCompleted ?
+                    "bg-primary text-on-primary shadow-[0_4px_12px_rgba(12,95,174,0.3)]"
                   : isCurrent ?
-                    "border-2 border-blue-500 bg-white text-blue-600"
-                  : "border border-gray-300 bg-gray-50 text-gray-400"
+                    "bg-surface-container-lowest ring-2 ring-primary text-primary shadow-[0_4px_12px_rgba(12,95,174,0.15)]"
+                  : "bg-surface-container text-outline"
                 }`}
                 title={task.title_lv}
               >
                 {isCompleted ?
-                  <svg
-                    className="h-4 w-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={3}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
+                  <span className="material-symbols-outlined text-sm">
+                    check
+                  </span>
                 : idx + 1}
               </div>
             </li>

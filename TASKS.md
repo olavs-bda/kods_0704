@@ -55,7 +55,7 @@
 | 2.2 | Define Convex schema: sessions table      | ✅ COMPLETED | HIGH     | organisationId, participantCode, currentTaskIndex, startedAt, lastActiveAt, expiresAt, submissionCount; indexes by_organisationId_and_participantCode |
 | 2.3 | Define Convex schema: tasks table         | ✅ COMPLETED | HIGH     | slug, title_lv, instruction_lv, context_lv, expectedOutput, level, hints_lv (optional), example_lv (optional); index by_slug                          |
 | 2.4 | Define Convex schema: submissions table   | ✅ COMPLETED | HIGH     | sessionId, taskId (reference to tasks), prompt, createdAt, feedback object; index by_sessionId                                                        |
-| 2.5 | Seed initial organisation + task data     | ✅ COMPLETED | MEDIUM   | `convex/seed.ts` — 2 orgs (BDA-2026, Saeima100426), 6 individual tasks (2/level), orgs link via taskIds array                                         |
+| 2.5 | Seed initial organisation + task data     | ✅ COMPLETED | MEDIUM   | `convex/seed.ts` — 1 org (BDA-2026), 6 individual tasks (2/level), org links via taskIds array                                         |
 
 ## Phase 3: Session Management ✅ COMPLETED
 
@@ -110,13 +110,13 @@
 | --- | ---------------------------------------------- | --------- | -------- | --------------------------------------------------------------------------------- |
 | 8.1 | End-to-end access → task → submit flow testing | ✅ COMPLETED | HIGH     | `convex/flow.test.ts` — 13 tests: session creation, task retrieval, advancement, submission storage, rate-limit enforcement |
 | 8.2 | Session expiry edge cases                      | ✅ COMPLETED | HIGH     | `convex/expiry.test.ts` — 10 tests: expired session rejected at login/touch/task/advance/submit; mid-task expiry auto-redirects in `TaskWorkspace.tsx` |
-| 8.3 | Rate limiting validation                       | ⏸ PENDING | HIGH     | Verify submission count enforcement; clear error message when limit reached       |
-| 8.4 | OpenAI error handling                          | ⏸ PENDING | HIGH     | Timeout, malformed response, API errors → graceful fallback messages              |
+| 8.3 | Rate limiting validation                       | ✅ COMPLETED | HIGH     | `convex/rateLimit.test.ts` — 8 tests: boundary (at/below/above limit), enforcement through storeSubmission, Latvian error messages |
+| 8.4 | OpenAI error handling                          | ✅ COMPLETED | HIGH     | `classifyOpenAIError()` in submitPrompt.ts — timeout (30s), rate limit, auth, connection, 5xx; all Latvian messages; 5 tests |
 | 8.5 | Mobile responsiveness                          | ⏸ PENDING | MEDIUM   | Verify all pages work on mobile; touch-friendly inputs and buttons                |
 | 8.6 | UI/UX polish                                   | ⏸ PENDING | MEDIUM   | Consistent spacing, typography, Latvian copy review                               |
 | 8.7 | Production deployment to Vercel                | ⏸ PENDING | HIGH     | Environment vars set, Convex prod deployment, OpenAI key configured, smoke test   |
 | 8.8 | Token-level usage tracking                     | ⏸ PENDING | MEDIUM   | Track per-submission token usage (input/output); enforce budget cap per user      |
-| 8.9 | User onboarding / help                         | ⏸ PENDING | MEDIUM   | First-visit guidance, UI walkthrough or help overlay; explain workflow in Latvian |
+| 8.9 | User onboarding / help                         | ✅ COMPLETED | MEDIUM   | `HelpOverlay.tsx` — first-visit banner + persistent help button + 4-step modal walkthrough; all Latvian |
 
 ---
 

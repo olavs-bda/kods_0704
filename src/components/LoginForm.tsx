@@ -62,7 +62,7 @@ export default function LoginForm({
       <div>
         <label
           htmlFor="orgCode"
-          className="block text-sm font-medium text-gray-700"
+          className="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-1"
         >
           Organizācijas kods
         </label>
@@ -78,14 +78,14 @@ export default function LoginForm({
           }}
           placeholder="piem., BDA-2026"
           autoComplete="off"
-          className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+          className="block w-full rounded-xl bg-surface-container-highest border-0 px-4 py-3 text-sm text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors"
         />
       </div>
 
       <div>
         <label
           htmlFor="participantCode"
-          className="block text-sm font-medium text-gray-700"
+          className="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-1"
         >
           Dalībnieka kods
         </label>
@@ -99,14 +99,14 @@ export default function LoginForm({
           }}
           placeholder="piem., Jānis"
           autoComplete="off"
-          className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+          className="block w-full rounded-xl bg-surface-container-highest border-0 px-4 py-3 text-sm text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors"
         />
       </div>
 
       {error && (
         <div
           role="alert"
-          className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+          className="rounded-xl bg-error-container px-4 py-3 text-sm text-on-error-container"
         >
           {error}
         </div>
@@ -115,7 +115,7 @@ export default function LoginForm({
       <button
         type="submit"
         disabled={loading}
-        className="w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+        className="w-full rounded-full bg-primary px-4 py-3 text-sm font-semibold text-on-primary shadow-[0_4px_16px_rgba(12,95,174,0.25)] hover:shadow-[0_6px_20px_rgba(12,95,174,0.35)] hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-50 transition-all"
       >
         {loading ? "Notiek pieslēgšanās..." : "Sākt darbnīcu"}
       </button>

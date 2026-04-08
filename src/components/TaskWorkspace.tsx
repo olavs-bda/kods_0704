@@ -15,6 +15,7 @@ import SubmissionHistory from "./SubmissionHistory";
 import TaskStepper from "./TaskStepper";
 import TaskDisplay from "./TaskDisplay";
 import PromptForm, { SubmittingIndicator } from "./PromptForm";
+import HelpOverlay from "./HelpOverlay";
 
 interface Feedback {
   strengths_lv: string;
@@ -70,7 +71,11 @@ function TaskView({ sessionId }: { sessionId: Id<"sessions"> }) {
 
   // 8.2 — Auto-redirect when session expiry is detected mid-task
   useEffect(() => {
-    if (taskData && "error" in taskData && taskData.error === SESSION_EXPIRED_ERROR) {
+    if (
+      taskData &&
+      "error" in taskData &&
+      taskData.error === SESSION_EXPIRED_ERROR
+    ) {
       clearSession();
       // replace() prevents the user navigating back into the expired session
       window.location.replace("/");
@@ -157,26 +162,26 @@ function TaskView({ sessionId }: { sessionId: Id<"sessions"> }) {
 
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
+        <div className="flex items-center gap-2">
+          <span className="rounded-full bg-primary-container px-3 py-1 text-xs font-bold text-on-primary-container">
             {taskIndex + 1}/{totalTasks}
           </span>
-          <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
-            Līmenis: {levelLabels[task.level] ?? task.level}
+          <span className="rounded-full bg-surface-container-high px-3 py-1 text-xs font-medium text-on-surface-variant">
+            {levelLabels[task.level] ?? task.level}
           </span>
         </div>
         <div className="flex items-center gap-3">
           {participantCode && (
-            <span className="text-xs text-gray-500">
-              Veiksmīgu uzvedņošanu,{" "}
-              <span className="font-semibold text-gray-700">
+            <span className="text-xs text-on-surface-variant">
+              Sveiks,{" "}
+              <span className="font-semibold text-on-surface">
                 {participantCode}
               </span>
             </span>
           )}
           <button
             onClick={handleLogout}
-            className="text-xs text-gray-400 hover:text-gray-600"
+            className="text-xs text-outline hover:text-on-surface transition-colors"
           >
             Iziet
           </button>
@@ -204,7 +209,7 @@ function TaskView({ sessionId }: { sessionId: Id<"sessions"> }) {
         <button
           onClick={handleAdvance}
           disabled={advancing}
-          className="w-full rounded-lg border-2 border-blue-600 bg-white px-4 py-2.5 text-sm font-semibold text-blue-600 shadow-sm hover:bg-blue-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50"
+          className="w-full rounded-full bg-surface-container-highest px-4 py-3 text-sm font-semibold text-primary hover:bg-primary hover:text-on-primary shadow-[0_4px_16px_rgba(12,95,174,0.1)] hover:shadow-[0_4px_16px_rgba(12,95,174,0.25)] focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50 transition-all"
         >
           {advancing ?
             "Notiek pāreja..."
@@ -227,15 +232,15 @@ function LoadingSkeleton() {
   return (
     <div className="animate-pulse space-y-6">
       <div className="flex gap-3">
-        <div className="h-7 w-16 rounded-full bg-gray-200" />
-        <div className="h-7 w-24 rounded-full bg-gray-200" />
+        <div className="h-7 w-16 rounded-full bg-surface-container-high" />
+        <div className="h-7 w-24 rounded-full bg-surface-container-high" />
       </div>
-      <div className="space-y-3 rounded-xl border border-gray-200 bg-white p-6">
-        <div className="h-6 w-3/4 rounded bg-gray-200" />
-        <div className="h-4 w-full rounded bg-gray-200" />
-        <div className="h-4 w-5/6 rounded bg-gray-200" />
+      <div className="space-y-3 rounded-2xl bg-surface-container-lowest p-6">
+        <div className="h-6 w-3/4 rounded-lg bg-surface-container-high" />
+        <div className="h-4 w-full rounded-lg bg-surface-container-high" />
+        <div className="h-4 w-5/6 rounded-lg bg-surface-container-high" />
       </div>
-      <div className="h-32 rounded-lg bg-gray-200" />
+      <div className="h-32 rounded-2xl bg-surface-container-high" />
     </div>
   );
 }
@@ -248,12 +253,12 @@ function SessionError({ message }: { message: string }) {
 
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
-      <div className="rounded-xl border border-red-200 bg-red-50 px-6 py-4 text-center">
-        <p className="text-sm font-medium text-red-700">{message}</p>
+      <div className="rounded-2xl bg-error-container px-6 py-4 text-center">
+        <p className="text-sm font-medium text-on-error-container">{message}</p>
       </div>
       <button
         onClick={handleReturn}
-        className="text-sm text-blue-600 hover:underline"
+        className="text-sm text-primary hover:underline"
       >
         Atgriezties uz sākumlapu
       </button>
@@ -269,32 +274,25 @@ function CompletionScreen({ totalTasks }: { totalTasks: number }) {
 
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center gap-6 text-center">
-      <div className="rounded-full bg-green-100 p-4">
-        <svg
-          className="h-12 w-12 text-green-600"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
+      <div className="rounded-full bg-secondary-container p-5 shadow-[0_12px_32px_rgba(43,52,55,0.06)]">
+        <span
+          className="material-symbols-outlined text-secondary text-5xl"
+          style={{ fontVariationSettings: "'FILL' 1" }}
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
-        </svg>
+          task_alt
+        </span>
       </div>
-      <div>
-        <h2 className="text-xl font-bold text-gray-900">
+      <div className="space-y-2">
+        <h2 className="text-2xl font-extrabold text-on-surface">
           Apsveicam! Darbnīca pabeigta!
         </h2>
-        <p className="mt-2 text-sm text-gray-600">
+        <p className="text-sm text-on-surface-variant">
           Jūs esat veiksmīgi izpildījis visus {totalTasks} uzdevumus.
         </p>
       </div>
       <button
         onClick={handleReturn}
-        className="rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
+        className="rounded-full bg-primary px-8 py-3 text-sm font-semibold text-on-primary shadow-[0_4px_16px_rgba(12,95,174,0.25)] hover:opacity-90 transition-all"
       >
         Atgriezties uz sākumlapu
       </button>
