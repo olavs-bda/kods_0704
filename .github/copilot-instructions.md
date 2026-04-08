@@ -27,6 +27,8 @@ Prompt Workshop Coach — a workshop-scoped web app for structured prompt-writin
 
 - Start files with `// path/filename` one-line comment
 - Comments describe _purpose_, not effect
+- Use brief comments to preserve non-obvious context, assumptions, invariants, or cross-file coupling when that context would otherwise be easy to lose
+- Avoid comment bloat: no line-by-line narration, and prefer short boundary comments over frequent inline commentary
 - No `any` types — use strict TypeScript throughout
 
 ## Convex Rules

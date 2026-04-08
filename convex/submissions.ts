@@ -63,7 +63,17 @@ export const getSubmissionContext = internalQuery({
     return {
       sessionId: session._id,
       submissionCount: session.submissionCount,
-      task,
+      task: {
+        _id: task._id,
+        slug: task.slug,
+        title_lv: task.title_lv,
+        instruction_lv: task.instruction_lv,
+        context_lv: task.context_lv,
+        expectedOutput: task.expectedOutput,
+        level: task.level,
+        hints_lv: task.hints_lv,
+        example_lv: task.example_lv,
+      },
       maxSubmissions: org.settings.maxSubmissionsPerUser,
     };
   },
