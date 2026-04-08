@@ -104,12 +104,12 @@
 | 7.5 | "Next Task" button and progression | ✅ COMPLETED | HIGH     | Shows after feedback; CompletionScreen at end; advanceTask mutation                 |
 | 7.6 | Submission history view            | ✅ COMPLETED | MEDIUM   | SubmissionHistory with expandable per-attempt view including feedback               |
 
-## Phase 8: Testing & Polish ⏸ PENDING
+## Phase 8: Testing & Polish 🚧 IN PROGRESS
 
-| ID  | Task                                           | Status    | Priority | Details                                                                           |
+| ID  | Task                                           | Status       | Priority | Details                                                                           |
 | --- | ---------------------------------------------- | --------- | -------- | --------------------------------------------------------------------------------- |
-| 8.1 | End-to-end access → task → submit flow testing | ⏸ PENDING | HIGH     | Enter codes → see task → submit prompt → receive feedback → next task             |
-| 8.2 | Session expiry edge cases                      | ⏸ PENDING | HIGH     | Expired session redirect; mid-task expiry handling                                |
+| 8.1 | End-to-end access → task → submit flow testing | ✅ COMPLETED | HIGH     | `convex/flow.test.ts` — 13 tests: session creation, task retrieval, advancement, submission storage, rate-limit enforcement |
+| 8.2 | Session expiry edge cases                      | ✅ COMPLETED | HIGH     | `convex/expiry.test.ts` — 10 tests: expired session rejected at login/touch/task/advance/submit; mid-task expiry auto-redirects in `TaskWorkspace.tsx` |
 | 8.3 | Rate limiting validation                       | ⏸ PENDING | HIGH     | Verify submission count enforcement; clear error message when limit reached       |
 | 8.4 | OpenAI error handling                          | ⏸ PENDING | HIGH     | Timeout, malformed response, API errors → graceful fallback messages              |
 | 8.5 | Mobile responsiveness                          | ⏸ PENDING | MEDIUM   | Verify all pages work on mobile; touch-friendly inputs and buttons                |

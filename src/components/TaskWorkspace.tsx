@@ -4,6 +4,7 @@ import { useState, useEffect, type FormEvent } from "react";
 import { useQuery, useAction, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
+import { SESSION_EXPIRED_ERROR } from "../../convex/constants";
 import {
   loadSession,
   loadParticipantCode,
@@ -66,6 +67,15 @@ function TaskView({ sessionId }: { sessionId: Id<"sessions"> }) {
       setError(null);
     }
   }, [taskData && !("error" in taskData) ? taskData.taskIndex : null]);
+
+  // 8.2 — Auto-redirect when session expiry is detected mid-task
+  useEffect(() => {
+    if (taskData && "error" in taskData && taskData.error === SESSION_EXPIRED_ERROR) {
+      clearSession();
+      // replace() prevents the user navigating back into the expired session
+      window.location.replace("/");
+    }
+  }, [taskData]);
 
   if (!taskData) {
     return <LoadingSkeleton />;

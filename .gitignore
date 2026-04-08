@@ -8,8 +8,8 @@ dist/
 .env
 .env.local
 
-# Convex generated
-convex/_generated/
+# Convex generated (committed for offline testing; regenerate with `npx convex dev`)
+# convex/_generated/
 
 # Astro
 .astro/
