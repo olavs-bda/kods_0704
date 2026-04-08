@@ -4,18 +4,7 @@ import type { QueryCtx, MutationCtx } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
 import { v } from "convex/values";
 import { SESSION_EXPIRED_ERROR } from "./constants";
-
-const taskValidator = v.object({
-  _id: v.id("tasks"),
-  slug: v.string(),
-  title_lv: v.string(),
-  instruction_lv: v.string(),
-  context_lv: v.string(),
-  expectedOutput: v.string(),
-  level: v.number(),
-  hints_lv: v.optional(v.string()),
-  example_lv: v.optional(v.string()),
-});
+import { feedbackValidator, taskFieldsValidator } from "./validators";
 
 // Helper: strip system fields from task document
 function pickTaskFields(task: Doc<"tasks">) {
@@ -50,7 +39,7 @@ export const getCurrentTask = query({
   args: { sessionId: v.id("sessions") },
   returns: v.union(
     v.object({
-      task: taskValidator,
+      task: taskFieldsValidator,
       taskIndex: v.number(),
       totalTasks: v.number(),
       isCompleted: v.boolean(),
@@ -147,7 +136,7 @@ export const advanceTask = mutation({
 // Get first task for login page preview (any org)
 export const getFirstTask = query({
   args: {},
-  returns: v.union(taskValidator, v.null()),
+  returns: v.union(taskFieldsValidator, v.null()),
   handler: async (ctx) => {
     const task = await ctx.db.query("tasks").first();
     if (!task) return null;
@@ -199,15 +188,7 @@ export const getSubmissionHistory = query({
       taskId: v.id("tasks"),
       prompt: v.string(),
       createdAt: v.number(),
-      feedback: v.optional(
-        v.object({
-          strengths_lv: v.string(),
-          weaknesses_lv: v.string(),
-          improvedPrompt_lv: v.string(),
-          explanation_lv: v.string(),
-          nextStep_lv: v.string(),
-        }),
-      ),
+      feedback: v.optional(feedbackValidator),
     }),
   ),
   handler: async (ctx, args) => {

@@ -2,14 +2,7 @@
 import { v } from "convex/values";
 import { internalMutation, internalQuery, query } from "./_generated/server";
 import { SESSION_EXPIRED_ERROR } from "./constants";
-
-export const feedbackValidator = v.object({
-  strengths_lv: v.string(),
-  weaknesses_lv: v.string(),
-  improvedPrompt_lv: v.string(),
-  explanation_lv: v.string(),
-  nextStep_lv: v.string(),
-});
+import { feedbackValidator, taskFieldsValidator } from "./validators";
 
 // 5.4 — Validate session, rate limit, and return task context
 export const getSubmissionContext = internalQuery({
@@ -18,17 +11,7 @@ export const getSubmissionContext = internalQuery({
     v.object({
       sessionId: v.id("sessions"),
       submissionCount: v.number(),
-      task: v.object({
-        _id: v.id("tasks"),
-        slug: v.string(),
-        title_lv: v.string(),
-        instruction_lv: v.string(),
-        context_lv: v.string(),
-        expectedOutput: v.string(),
-        level: v.number(),
-        hints_lv: v.optional(v.string()),
-        example_lv: v.optional(v.string()),
-      }),
+      task: taskFieldsValidator,
       maxSubmissions: v.number(),
     }),
     v.object({ error: v.string() }),

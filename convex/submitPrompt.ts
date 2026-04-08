@@ -2,11 +2,12 @@
 "use node";
 
 import { v } from "convex/values";
+import type { Infer } from "convex/values";
 import { action } from "./_generated/server";
 import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import OpenAI from "openai";
-import { feedbackValidator } from "./submissions";
+import { feedbackValidator, taskFieldsValidator } from "./validators";
 import {
   AI_MODEL,
   AI_TEMPERATURE,
@@ -14,25 +15,8 @@ import {
   AI_MAX_RETRIES,
 } from "./constants";
 
-type Feedback = {
-  strengths_lv: string;
-  weaknesses_lv: string;
-  improvedPrompt_lv: string;
-  explanation_lv: string;
-  nextStep_lv: string;
-};
-
-type TaskInfo = {
-  _id: string;
-  slug: string;
-  title_lv: string;
-  instruction_lv: string;
-  context_lv: string;
-  expectedOutput: string;
-  level: number;
-  hints_lv?: string;
-  example_lv?: string;
-};
+type Feedback = Infer<typeof feedbackValidator>;
+type TaskFields = Infer<typeof taskFieldsValidator>;
 
 // 5.1–5.3 — Submit prompt: validate → call OpenAI → parse response → store
 export const submitPrompt = action({
@@ -59,7 +43,7 @@ export const submitPrompt = action({
       | {
           sessionId: Id<"sessions">;
           submissionCount: number;
-          task: TaskInfo;
+          task: TaskFields;
           maxSubmissions: number;
         }
       | { error: string } = await ctx.runQuery(
@@ -158,7 +142,7 @@ You MUST respond with a valid JSON object with exactly these fields:
 }
 
 // 5.2 — User prompt template
-export function buildUserPrompt(userPrompt: string, task: TaskInfo): string {
+export function buildUserPrompt(userPrompt: string, task: TaskFields): string {
   return `Evaluate the following prompt written by a workshop participant.
 
 TASK INFORMATION:

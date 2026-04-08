@@ -1,9 +1,9 @@
 // src/lib/sessionStore.test.ts
-import { expect, test, describe, beforeEach } from "vitest";
+import { expect, test, describe, beforeEach, vi } from "vitest";
 
-// Mock sessionStorage for the edge-runtime environment which lacks browser APIs
+// Mock localStorage for the edge-runtime environment which lacks browser APIs
 const store: Record<string, string> = {};
-const sessionStorageMock: Storage = {
+const localStorageMock: Storage = {
   getItem: (key: string) => store[key] ?? null,
   setItem: (key: string, value: string) => {
     store[key] = value;
@@ -19,7 +19,7 @@ const sessionStorageMock: Storage = {
   },
   key: (index: number) => Object.keys(store)[index] ?? null,
 };
-(globalThis as { sessionStorage: Storage }).sessionStorage = sessionStorageMock;
+(globalThis as { localStorage: Storage }).localStorage = localStorageMock;
 
 // Import after mock is set up
 import {
@@ -27,32 +27,25 @@ import {
   loadSession,
   loadParticipantCode,
   clearSession,
-  $sessionId,
 } from "./sessionStore";
 import type { Id } from "../../convex/_generated/dataModel";
 
 beforeEach(() => {
-  // Clear storage and reset atom before each test
-  sessionStorageMock.clear();
-  $sessionId.set(null);
+  localStorageMock.clear();
+  vi.restoreAllMocks();
 });
 
 describe("persistSession", () => {
-  test("stores session in sessionStorage", () => {
+  test("stores session in localStorage", () => {
     const id = "sessions:abc123" as Id<"sessions">;
     persistSession(id, "BDA-2026", "p001");
-    const raw = sessionStorageMock.getItem("pwc_session");
+    const raw = localStorageMock.getItem("pwc_session");
     expect(raw).not.toBeNull();
     const parsed = JSON.parse(raw!);
     expect(parsed.sessionId).toBe(id);
     expect(parsed.organisationCode).toBe("BDA-2026");
     expect(parsed.participantCode).toBe("p001");
-  });
-
-  test("updates the $sessionId atom", () => {
-    const id = "sessions:def456" as Id<"sessions">;
-    persistSession(id, "ORG", "p002");
-    expect($sessionId.get()).toBe(id);
+    expect(parsed.storedAt).toBeTypeOf("number");
   });
 });
 
@@ -66,18 +59,29 @@ describe("loadSession", () => {
     const id = "sessions:ghi789" as Id<"sessions">;
     persistSession(id, "BDA-2026", "p003");
 
-    // Reset atom to test that loadSession restores it
-    $sessionId.set(null);
-
     const result = loadSession();
     expect(result).toBe(id);
-    expect($sessionId.get()).toBe(id);
   });
 
   test("returns null for corrupt JSON", () => {
     store["pwc_session"] = "not-valid-json{{{";
     const result = loadSession();
     expect(result).toBeNull();
+  });
+
+  test("returns null and clears entry when TTL has expired", () => {
+    const id = "sessions:expired1" as Id<"sessions">;
+    // Manually store with a storedAt far in the past (73h ago)
+    store["pwc_session"] = JSON.stringify({
+      sessionId: id,
+      organisationCode: "BDA-2026",
+      participantCode: "p-old",
+      storedAt: Date.now() - 73 * 60 * 60 * 1000,
+    });
+
+    const result = loadSession();
+    expect(result).toBeNull();
+    expect(localStorageMock.getItem("pwc_session")).toBeNull();
   });
 });
 
@@ -102,23 +106,13 @@ describe("loadParticipantCode", () => {
 });
 
 describe("clearSession", () => {
-  test("removes session from sessionStorage", () => {
+  test("removes session from localStorage", () => {
     const id = "sessions:mno345" as Id<"sessions">;
     persistSession(id, "BDA-2026", "p004");
 
     clearSession();
 
-    expect(sessionStorageMock.getItem("pwc_session")).toBeNull();
-  });
-
-  test("resets the $sessionId atom to null", () => {
-    const id = "sessions:pqr678" as Id<"sessions">;
-    persistSession(id, "BDA-2026", "p005");
-    expect($sessionId.get()).toBe(id);
-
-    clearSession();
-
-    expect($sessionId.get()).toBeNull();
+    expect(localStorageMock.getItem("pwc_session")).toBeNull();
   });
 
   test("loadSession returns null after clear", () => {

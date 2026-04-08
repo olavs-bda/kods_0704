@@ -8,7 +8,7 @@ dist/
 .env
 .env.local
 
-# Convex generated (full runtime artifacts — keep minimal test stubs committed)
+# Convex generated — commit .d.ts type declarations, ignore runtime JS
 convex/_generated/*.js
 convex/_generated/*.js.map
 

@@ -4,14 +4,14 @@ import { convexTest } from "convex-test";
 import { expect, test, describe } from "vitest";
 import type { Id } from "./_generated/dataModel";
 import schema from "./schema";
-import * as sessions from "./sessions";
-import * as tasks from "./tasks";
-import * as submissions from "./submissions";
+import { api, internal } from "./_generated/api";
 
 // Explicit module map — excludes the node-only submitPrompt action
-const modules = import.meta.glob(
-  ["./**/*.ts", "!./submitPrompt.ts", "!./**/*.test.ts"],
-);
+const modules = import.meta.glob([
+  "./**/*.ts",
+  "!./submitPrompt.ts",
+  "!./**/*.test.ts",
+]);
 
 // Seeds one organisation with two tasks and returns their IDs
 async function seedOrg(t: ReturnType<typeof convexTest>) {
@@ -47,7 +47,7 @@ describe("8.1 — validateOrganisation", () => {
     const t = convexTest(schema, modules);
     await seedOrg(t);
 
-    const result = await t.query(sessions.validateOrganisation, {
+    const result = await t.query(api.sessions.validateOrganisation, {
       code: "TEST-2025",
     });
 
@@ -60,7 +60,7 @@ describe("8.1 — validateOrganisation", () => {
   test("returns null for an unknown code", async () => {
     const t = convexTest(schema, modules);
 
-    const result = await t.query(sessions.validateOrganisation, {
+    const result = await t.query(api.sessions.validateOrganisation, {
       code: "NO-SUCH-ORG",
     });
 
@@ -73,7 +73,7 @@ describe("8.1 — createOrResumeSession", () => {
     const t = convexTest(schema, modules);
     await seedOrg(t);
 
-    const result = await t.mutation(sessions.createOrResumeSession, {
+    const result = await t.mutation(api.sessions.createOrResumeSession, {
       organisationCode: "TEST-2025",
       participantCode: "DALIBNIEKS-01",
     });
@@ -88,7 +88,7 @@ describe("8.1 — createOrResumeSession", () => {
   test("returns error for an invalid organisation code", async () => {
     const t = convexTest(schema, modules);
 
-    const result = await t.mutation(sessions.createOrResumeSession, {
+    const result = await t.mutation(api.sessions.createOrResumeSession, {
       organisationCode: "INVALID",
       participantCode: "DALIBNIEKS-01",
     });
@@ -103,12 +103,12 @@ describe("8.1 — createOrResumeSession", () => {
     const t = convexTest(schema, modules);
     await seedOrg(t);
 
-    await t.mutation(sessions.createOrResumeSession, {
+    await t.mutation(api.sessions.createOrResumeSession, {
       organisationCode: "TEST-2025",
       participantCode: "DALIBNIEKS-02",
     });
 
-    const result = await t.mutation(sessions.createOrResumeSession, {
+    const result = await t.mutation(api.sessions.createOrResumeSession, {
       organisationCode: "TEST-2025",
       participantCode: "DALIBNIEKS-02",
     });
@@ -123,11 +123,11 @@ describe("8.1 — createOrResumeSession", () => {
     const t = convexTest(schema, modules);
     await seedOrg(t);
 
-    const r1 = await t.mutation(sessions.createOrResumeSession, {
+    const r1 = await t.mutation(api.sessions.createOrResumeSession, {
       organisationCode: "TEST-2025",
       participantCode: "DALIBNIEKS-A",
     });
-    const r2 = await t.mutation(sessions.createOrResumeSession, {
+    const r2 = await t.mutation(api.sessions.createOrResumeSession, {
       organisationCode: "TEST-2025",
       participantCode: "DALIBNIEKS-B",
     });
@@ -144,14 +144,14 @@ describe("8.1 — getCurrentTask", () => {
     const t = convexTest(schema, modules);
     const { task1Id } = await seedOrg(t);
 
-    const session = await t.mutation(sessions.createOrResumeSession, {
+    const session = await t.mutation(api.sessions.createOrResumeSession, {
       organisationCode: "TEST-2025",
       participantCode: "DALIBNIEKS-03",
     });
     expect("sessionId" in session).toBe(true);
     if (!("sessionId" in session)) return;
 
-    const taskData = await t.query(tasks.getCurrentTask, {
+    const taskData = await t.query(api.tasks.getCurrentTask, {
       sessionId: session.sessionId,
     });
 
@@ -167,10 +167,29 @@ describe("8.1 — getCurrentTask", () => {
   test("returns error for an unknown session id", async () => {
     const t = convexTest(schema, modules);
 
-    // Cast a sentinel string to the branded Id type for this error-path test
-    const unknownId = "unknown_session" as unknown as Id<"sessions">;
-    const taskData = await t.query(tasks.getCurrentTask, {
-      sessionId: unknownId,
+    // Create and immediately delete a session to get a valid-format but non-existent ID
+    const deletedId = await t.run(async (ctx) => {
+      const orgId = await ctx.db.insert("organisations", {
+        name: "Temp",
+        code: "TEMP",
+        taskIds: [],
+        settings: { sessionExpiryHours: 24, maxSubmissionsPerUser: 5 },
+      });
+      const id = await ctx.db.insert("sessions", {
+        organisationId: orgId,
+        participantCode: "TEMP",
+        currentTaskIndex: 0,
+        submissionCount: 0,
+        startedAt: Date.now(),
+        expiresAt: Date.now() + 60_000,
+        lastActiveAt: Date.now(),
+      });
+      await ctx.db.delete(id);
+      return id;
+    });
+
+    const taskData = await t.query(api.tasks.getCurrentTask, {
+      sessionId: deletedId,
     });
 
     expect(taskData).toHaveProperty("error");
@@ -182,14 +201,14 @@ describe("8.1 — advanceTask", () => {
     const t = convexTest(schema, modules);
     const { task2Id } = await seedOrg(t);
 
-    const session = await t.mutation(sessions.createOrResumeSession, {
+    const session = await t.mutation(api.sessions.createOrResumeSession, {
       organisationCode: "TEST-2025",
       participantCode: "DALIBNIEKS-04",
     });
     expect("sessionId" in session).toBe(true);
     if (!("sessionId" in session)) return;
 
-    const advance = await t.mutation(tasks.advanceTask, {
+    const advance = await t.mutation(api.tasks.advanceTask, {
       sessionId: session.sessionId,
     });
 
@@ -200,7 +219,7 @@ describe("8.1 — advanceTask", () => {
     }
 
     // Confirm current task is now the second one
-    const taskData = await t.query(tasks.getCurrentTask, {
+    const taskData = await t.query(api.tasks.getCurrentTask, {
       sessionId: session.sessionId,
     });
     if ("task" in taskData) {
@@ -213,15 +232,15 @@ describe("8.1 — advanceTask", () => {
     const t = convexTest(schema, modules);
     await seedOrg(t);
 
-    const session = await t.mutation(sessions.createOrResumeSession, {
+    const session = await t.mutation(api.sessions.createOrResumeSession, {
       organisationCode: "TEST-2025",
       participantCode: "DALIBNIEKS-05",
     });
     expect("sessionId" in session).toBe(true);
     if (!("sessionId" in session)) return;
 
-    await t.mutation(tasks.advanceTask, { sessionId: session.sessionId });
-    const last = await t.mutation(tasks.advanceTask, {
+    await t.mutation(api.tasks.advanceTask, { sessionId: session.sessionId });
+    const last = await t.mutation(api.tasks.advanceTask, {
       sessionId: session.sessionId,
     });
 
@@ -229,7 +248,7 @@ describe("8.1 — advanceTask", () => {
       expect(last.isCompleted).toBe(true);
     }
 
-    const taskData = await t.query(tasks.getCurrentTask, {
+    const taskData = await t.query(api.tasks.getCurrentTask, {
       sessionId: session.sessionId,
     });
     if ("task" in taskData) {
@@ -251,24 +270,27 @@ describe("8.1 — submission storage (storeSubmission + getTaskSubmissions)", ()
     const t = convexTest(schema, modules);
     const { task1Id } = await seedOrg(t);
 
-    const session = await t.mutation(sessions.createOrResumeSession, {
+    const session = await t.mutation(api.sessions.createOrResumeSession, {
       organisationCode: "TEST-2025",
       participantCode: "DALIBNIEKS-06",
     });
     expect("sessionId" in session).toBe(true);
     if (!("sessionId" in session)) return;
 
-    const submissionId = await t.mutation(submissions.storeSubmission, {
-      sessionId: session.sessionId,
-      taskId: task1Id,
-      prompt: "Mans tests prompts.",
-      feedback: mockFeedback,
-    });
+    const submissionId = await t.mutation(
+      internal.submissions.storeSubmission,
+      {
+        sessionId: session.sessionId,
+        taskId: task1Id,
+        prompt: "Mans tests prompts.",
+        feedback: mockFeedback,
+      },
+    );
 
     expect(submissionId).toBeTruthy();
 
     // Verify submissionCount was incremented
-    const sessionState = await t.query(sessions.getSession, {
+    const sessionState = await t.query(api.sessions.getSession, {
       sessionId: session.sessionId,
     });
     expect(sessionState?.submissionCount).toBe(1);
@@ -278,27 +300,27 @@ describe("8.1 — submission storage (storeSubmission + getTaskSubmissions)", ()
     const t = convexTest(schema, modules);
     const { task1Id } = await seedOrg(t);
 
-    const session = await t.mutation(sessions.createOrResumeSession, {
+    const session = await t.mutation(api.sessions.createOrResumeSession, {
       organisationCode: "TEST-2025",
       participantCode: "DALIBNIEKS-07",
     });
     expect("sessionId" in session).toBe(true);
     if (!("sessionId" in session)) return;
 
-    await t.mutation(submissions.storeSubmission, {
+    await t.mutation(internal.submissions.storeSubmission, {
       sessionId: session.sessionId,
       taskId: task1Id,
       prompt: "Pirmais mēģinājums.",
       feedback: mockFeedback,
     });
-    await t.mutation(submissions.storeSubmission, {
+    await t.mutation(internal.submissions.storeSubmission, {
       sessionId: session.sessionId,
       taskId: task1Id,
       prompt: "Otrais mēģinājums.",
       feedback: mockFeedback,
     });
 
-    const result = await t.query(submissions.getTaskSubmissions, {
+    const result = await t.query(api.submissions.getTaskSubmissions, {
       sessionId: session.sessionId,
       taskId: task1Id,
     });
@@ -313,7 +335,7 @@ describe("8.1 — submission storage (storeSubmission + getTaskSubmissions)", ()
     const { task1Id } = await seedOrg(t);
 
     // Exhaust the limit (10 submissions) by direct DB manipulation
-    const session = await t.mutation(sessions.createOrResumeSession, {
+    const session = await t.mutation(api.sessions.createOrResumeSession, {
       organisationCode: "TEST-2025",
       participantCode: "DALIBNIEKS-08",
     });
@@ -324,7 +346,7 @@ describe("8.1 — submission storage (storeSubmission + getTaskSubmissions)", ()
       await ctx.db.patch(session.sessionId, { submissionCount: 10 });
     });
 
-    const context = await t.query(submissions.getSubmissionContext, {
+    const context = await t.query(internal.submissions.getSubmissionContext, {
       sessionId: session.sessionId,
       taskId: task1Id,
     });

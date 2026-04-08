@@ -14,3 +14,6 @@ export const AI_MAX_RETRIES = 1;
 
 // Time helpers
 export const MS_PER_HOUR = 60 * 60 * 1000;
+
+// Cleanup: delete sessions and their submissions after this many days
+export const STALE_DATA_RETENTION_DAYS = 90;

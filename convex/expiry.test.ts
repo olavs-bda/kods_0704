@@ -4,14 +4,14 @@ import { convexTest } from "convex-test";
 import { expect, test, describe } from "vitest";
 import type { Id } from "./_generated/dataModel";
 import schema from "./schema";
-import * as sessions from "./sessions";
-import * as tasks from "./tasks";
-import * as submissions from "./submissions";
+import { api, internal } from "./_generated/api";
 import { SESSION_EXPIRED_ERROR } from "./constants";
 
-const modules = import.meta.glob(
-  ["./**/*.ts", "!./submitPrompt.ts", "!./**/*.test.ts"],
-);
+const modules = import.meta.glob([
+  "./**/*.ts",
+  "!./submitPrompt.ts",
+  "!./**/*.test.ts",
+]);
 
 // Seeds one org with one task; returns typed orgId and taskId
 async function seedOrg(
@@ -62,7 +62,7 @@ describe("8.2 — createOrResumeSession: expired session", () => {
     const { orgId } = await seedOrg(t);
     await insertExpiredSession(t, orgId, "EXPIRED-USER");
 
-    const result = await t.mutation(sessions.createOrResumeSession, {
+    const result = await t.mutation(api.sessions.createOrResumeSession, {
       organisationCode: "EXP-ORG",
       participantCode: "EXPIRED-USER",
     });
@@ -79,7 +79,7 @@ describe("8.2 — createOrResumeSession: expired session", () => {
     const t = convexTest(schema, modules);
     await seedOrg(t);
 
-    const result = await t.mutation(sessions.createOrResumeSession, {
+    const result = await t.mutation(api.sessions.createOrResumeSession, {
       organisationCode: "EXP-ORG",
       participantCode: "FRESH-USER",
     });
@@ -97,7 +97,7 @@ describe("8.2 — touchSession: expired session", () => {
     const { orgId } = await seedOrg(t);
     const sessionId = await insertExpiredSession(t, orgId, "TOUCH-EXPIRED");
 
-    const result = await t.mutation(sessions.touchSession, {
+    const result = await t.mutation(api.sessions.touchSession, {
       sessionId,
     });
 
@@ -108,14 +108,14 @@ describe("8.2 — touchSession: expired session", () => {
     const t = convexTest(schema, modules);
     await seedOrg(t);
 
-    const session = await t.mutation(sessions.createOrResumeSession, {
+    const session = await t.mutation(api.sessions.createOrResumeSession, {
       organisationCode: "EXP-ORG",
       participantCode: "TOUCH-VALID",
     });
     expect("sessionId" in session).toBe(true);
     if (!("sessionId" in session)) return;
 
-    const result = await t.mutation(sessions.touchSession, {
+    const result = await t.mutation(api.sessions.touchSession, {
       sessionId: session.sessionId,
     });
 
@@ -129,7 +129,7 @@ describe("8.2 — getSession: expired field", () => {
     const { orgId } = await seedOrg(t);
     const sessionId = await insertExpiredSession(t, orgId, "GET-EXPIRED");
 
-    const result = await t.query(sessions.getSession, {
+    const result = await t.query(api.sessions.getSession, {
       sessionId,
     });
 
@@ -141,14 +141,14 @@ describe("8.2 — getSession: expired field", () => {
     const t = convexTest(schema, modules);
     await seedOrg(t);
 
-    const session = await t.mutation(sessions.createOrResumeSession, {
+    const session = await t.mutation(api.sessions.createOrResumeSession, {
       organisationCode: "EXP-ORG",
       participantCode: "GET-VALID",
     });
     expect("sessionId" in session).toBe(true);
     if (!("sessionId" in session)) return;
 
-    const result = await t.query(sessions.getSession, {
+    const result = await t.query(api.sessions.getSession, {
       sessionId: session.sessionId,
     });
 
@@ -161,13 +161,9 @@ describe("8.2 — getCurrentTask: expired session", () => {
   test("returns error when session is expired", async () => {
     const t = convexTest(schema, modules);
     const { orgId } = await seedOrg(t);
-    const sessionId = await insertExpiredSession(
-      t,
-      orgId,
-      "TASK-EXPIRED-USER",
-    );
+    const sessionId = await insertExpiredSession(t, orgId, "TASK-EXPIRED-USER");
 
-    const result = await t.query(tasks.getCurrentTask, {
+    const result = await t.query(api.tasks.getCurrentTask, {
       sessionId,
     });
 
@@ -182,7 +178,7 @@ describe("8.2 — getCurrentTask: expired session", () => {
     await seedOrg(t);
 
     // Create a session that is valid now
-    const session = await t.mutation(sessions.createOrResumeSession, {
+    const session = await t.mutation(api.sessions.createOrResumeSession, {
       organisationCode: "EXP-ORG",
       participantCode: "MID-TASK-USER",
     });
@@ -197,7 +193,7 @@ describe("8.2 — getCurrentTask: expired session", () => {
     });
 
     // Subsequent call should now report expiry
-    const result = await t.query(tasks.getCurrentTask, {
+    const result = await t.query(api.tasks.getCurrentTask, {
       sessionId: session.sessionId,
     });
 
@@ -214,7 +210,7 @@ describe("8.2 — advanceTask: expired session", () => {
     const { orgId } = await seedOrg(t);
     const sessionId = await insertExpiredSession(t, orgId, "ADVANCE-EXPIRED");
 
-    const result = await t.mutation(tasks.advanceTask, {
+    const result = await t.mutation(api.tasks.advanceTask, {
       sessionId,
     });
 
@@ -235,7 +231,7 @@ describe("8.2 — getSubmissionContext: expired session", () => {
       "SUBMIT-EXPIRED-USER",
     );
 
-    const result = await t.query(submissions.getSubmissionContext, {
+    const result = await t.query(internal.submissions.getSubmissionContext, {
       sessionId,
       taskId,
     });

@@ -1,6 +1,7 @@
 // convex/schema.ts
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import { feedbackValidator } from "./validators";
 
 export default defineSchema({
   organisations: defineTable({
@@ -42,15 +43,7 @@ export default defineSchema({
     taskId: v.id("tasks"),
     prompt: v.string(),
     createdAt: v.number(),
-    feedback: v.optional(
-      v.object({
-        strengths_lv: v.string(),
-        weaknesses_lv: v.string(),
-        improvedPrompt_lv: v.string(),
-        explanation_lv: v.string(),
-        nextStep_lv: v.string(),
-      }),
-    ),
+    feedback: v.optional(feedbackValidator),
   })
     .index("by_sessionId", ["sessionId"])
     .index("by_sessionId_and_taskId", ["sessionId", "taskId"]),

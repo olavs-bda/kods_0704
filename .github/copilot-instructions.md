@@ -12,7 +12,7 @@ Prompt Workshop Coach — a workshop-scoped web app for structured prompt-writin
 - **AI**: OpenAI API via Convex actions
 - **Styling**: TailwindCSS (utility-first only)
 - **Language**: TypeScript (strict mode)
-- **Libraries**: zod (validation), nanostores (state), date-fns (dates)
+- **Libraries**: zod (validation), date-fns (dates)
 
 ## Architecture
 
@@ -29,7 +29,7 @@ Prompt Workshop Coach — a workshop-scoped web app for structured prompt-writin
 - Comments describe _purpose_, not effect
 - Use brief comments to preserve non-obvious context, assumptions, invariants, or cross-file coupling when that context would otherwise be easy to lose
 - Avoid comment bloat: no line-by-line narration, and prefer short boundary comments over frequent inline commentary
-- No `any` types — use strict TypeScript throughout. Use `Doc<"tableName">`, `QueryCtx`, `MutationCtx` from generated types
+- No `any` types — use strict TypeScript throughout
 - **Single source of truth** — define shared validators, types, and constants once and import; never duplicate across files
 - **Always log errors** — `catch` blocks must `console.error` before returning user-facing messages; never swallow errors silently
 - **No magic numbers** — extract configurable values (model names, timeouts, temperatures, time multipliers) to `convex/constants.ts`
@@ -92,6 +92,7 @@ npx vitest run       # Run all tests (must pass before committing)
 - **Tests**: `npx vitest run` — all tests must pass; new backend logic requires tests
 - **No `any`**: grep for `: any` before committing — zero tolerance
 - **Error logging**: every `catch` block must `console.error(contextMsg, err)` before user-facing fallback
+- **Shared validators**: reuse validators from `convex/validators.ts` — never duplicate feedback or task-field shapes
 
 ## Commit Messages
 
