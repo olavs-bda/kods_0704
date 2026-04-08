@@ -67,6 +67,14 @@ function TaskView({ sessionId }: { sessionId: Id<"sessions"> }) {
     }
   }, [taskData && !("error" in taskData) ? taskData.taskIndex : null]);
 
+  // 8.2 — Auto-redirect when session expiry is detected mid-task
+  useEffect(() => {
+    if (taskData && "error" in taskData && taskData.error === "Sesija ir beigusies.") {
+      clearSession();
+      window.location.href = "/";
+    }
+  }, [taskData]);
+
   if (!taskData) {
     return <LoadingSkeleton />;
   }
