@@ -118,7 +118,7 @@ export const submitPrompt = action({
 });
 
 // 5.2 — System prompt template
-function buildSystemPrompt(level: number): string {
+export function buildSystemPrompt(level: number): string {
   const levelDescriptions: Record<number, string> = {
     1: "Basic level — the participant is a beginner. Provide encouraging, detailed feedback. Focus on fundamental prompt structure: clarity, specificity, and completeness.",
     2: "Intermediate level — the participant has some experience. Provide balanced feedback. Focus on context-setting, output format specification, and constraint definition.",
@@ -147,7 +147,7 @@ You MUST respond with a valid JSON object with exactly these fields:
 }
 
 // 5.2 — User prompt template
-function buildUserPrompt(userPrompt: string, task: TaskInfo): string {
+export function buildUserPrompt(userPrompt: string, task: TaskInfo): string {
   return `Evaluate the following prompt written by a workshop participant.
 
 TASK INFORMATION:
@@ -166,7 +166,7 @@ Provide your evaluation as a JSON object with the required fields. All text must
 }
 
 // 5.3 — Parse and validate AI response
-function parseFeedback(content: string): Feedback | null {
+export function parseFeedback(content: string): Feedback | null {
   try {
     const parsed = JSON.parse(content);
     const requiredFields = [

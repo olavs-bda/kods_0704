@@ -8,8 +8,9 @@ dist/
 .env
 .env.local
 
-# Convex generated
-convex/_generated/
+# Convex generated (full runtime artifacts — keep minimal test stubs committed)
+convex/_generated/*.js
+convex/_generated/*.js.map
 
 # Astro
 .astro/
@@ -20,3 +21,6 @@ convex/_generated/
 # OS
 .DS_Store
 Thumbs.db
+
+# Test coverage output
+coverage/
