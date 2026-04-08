@@ -7,13 +7,16 @@ import schema from "./schema";
 import * as sessions from "./sessions";
 import * as tasks from "./tasks";
 import * as submissions from "./submissions";
+import { SESSION_EXPIRED_ERROR } from "./constants";
 
 const modules = import.meta.glob(
   ["./**/*.ts", "!./submitPrompt.ts", "!./**/*.test.ts"],
 );
 
-// Seeds one org with one task; returns orgId and task1Id
-async function seedOrg(t: ReturnType<typeof convexTest>) {
+// Seeds one org with one task; returns typed orgId and taskId
+async function seedOrg(
+  t: ReturnType<typeof convexTest>,
+): Promise<{ orgId: Id<"organisations">; taskId: Id<"tasks"> }> {
   return t.run(async (ctx) => {
     const taskId = await ctx.db.insert("tasks", {
       slug: "expiry-task-1",
@@ -33,12 +36,12 @@ async function seedOrg(t: ReturnType<typeof convexTest>) {
   });
 }
 
-// Creates an already-expired session directly in the DB; returns sessionId
+// Creates an already-expired session directly in the DB; returns typed sessionId
 async function insertExpiredSession(
   t: ReturnType<typeof convexTest>,
   orgId: Id<"organisations">,
   participantCode: string,
-) {
+): Promise<Id<"sessions">> {
   return t.run(async (ctx) => {
     const pastTime = Date.now() - 60_000; // expired 60 seconds ago
     return ctx.db.insert("sessions", {
@@ -95,7 +98,7 @@ describe("8.2 — touchSession: expired session", () => {
     const sessionId = await insertExpiredSession(t, orgId, "TOUCH-EXPIRED");
 
     const result = await t.mutation(sessions.touchSession, {
-      sessionId: sessionId as any,
+      sessionId,
     });
 
     expect(result).toBe("expired");
@@ -127,7 +130,7 @@ describe("8.2 — getSession: expired field", () => {
     const sessionId = await insertExpiredSession(t, orgId, "GET-EXPIRED");
 
     const result = await t.query(sessions.getSession, {
-      sessionId: sessionId as any,
+      sessionId,
     });
 
     expect(result).not.toBeNull();
@@ -165,12 +168,12 @@ describe("8.2 — getCurrentTask: expired session", () => {
     );
 
     const result = await t.query(tasks.getCurrentTask, {
-      sessionId: sessionId as any,
+      sessionId,
     });
 
     expect(result).toHaveProperty("error");
     if ("error" in result) {
-      expect(result.error).toBe("Sesija ir beigusies.");
+      expect(result.error).toBe(SESSION_EXPIRED_ERROR);
     }
   });
 
@@ -200,7 +203,7 @@ describe("8.2 — getCurrentTask: expired session", () => {
 
     expect(result).toHaveProperty("error");
     if ("error" in result) {
-      expect(result.error).toBe("Sesija ir beigusies.");
+      expect(result.error).toBe(SESSION_EXPIRED_ERROR);
     }
   });
 });
@@ -212,12 +215,12 @@ describe("8.2 — advanceTask: expired session", () => {
     const sessionId = await insertExpiredSession(t, orgId, "ADVANCE-EXPIRED");
 
     const result = await t.mutation(tasks.advanceTask, {
-      sessionId: sessionId as any,
+      sessionId,
     });
 
     expect(result).toHaveProperty("error");
     if ("error" in result) {
-      expect(result.error).toBe("Sesija ir beigusies.");
+      expect(result.error).toBe(SESSION_EXPIRED_ERROR);
     }
   });
 });
@@ -233,13 +236,13 @@ describe("8.2 — getSubmissionContext: expired session", () => {
     );
 
     const result = await t.query(submissions.getSubmissionContext, {
-      sessionId: sessionId as any,
-      taskId: taskId as any,
+      sessionId,
+      taskId,
     });
 
     expect(result).toHaveProperty("error");
     if ("error" in result) {
-      expect(result.error).toBe("Sesija ir beigusies.");
+      expect(result.error).toBe(SESSION_EXPIRED_ERROR);
     }
   });
 });

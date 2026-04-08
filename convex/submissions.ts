@@ -1,6 +1,7 @@
 // convex/submissions.ts
 import { v } from "convex/values";
 import { internalMutation, internalQuery, query } from "./_generated/server";
+import { SESSION_EXPIRED_ERROR } from "./constants";
 
 export const feedbackValidator = v.object({
   strengths_lv: v.string(),
@@ -38,7 +39,7 @@ export const getSubmissionContext = internalQuery({
       return { error: "Sesija nav atrasta." };
     }
     if (Date.now() > session.expiresAt) {
-      return { error: "Sesija ir beigusies." };
+      return { error: SESSION_EXPIRED_ERROR };
     }
 
     const org = await ctx.db.get(session.organisationId);
