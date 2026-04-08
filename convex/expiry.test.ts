@@ -2,6 +2,7 @@
 // 8.2 — Session expiry edge case tests
 import { convexTest } from "convex-test";
 import { expect, test, describe } from "vitest";
+import type { Id } from "./_generated/dataModel";
 import schema from "./schema";
 import * as sessions from "./sessions";
 import * as tasks from "./tasks";
@@ -35,13 +36,13 @@ async function seedOrg(t: ReturnType<typeof convexTest>) {
 // Creates an already-expired session directly in the DB; returns sessionId
 async function insertExpiredSession(
   t: ReturnType<typeof convexTest>,
-  orgId: string,
+  orgId: Id<"organisations">,
   participantCode: string,
 ) {
   return t.run(async (ctx) => {
     const pastTime = Date.now() - 60_000; // expired 60 seconds ago
     return ctx.db.insert("sessions", {
-      organisationId: orgId as any,
+      organisationId: orgId,
       participantCode,
       currentTaskIndex: 0,
       startedAt: pastTime - 3600_000,

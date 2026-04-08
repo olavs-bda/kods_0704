@@ -10,6 +10,15 @@
  */
 
 import {
+  actionGeneric,
+  httpActionGeneric,
+  mutationGeneric,
+  queryGeneric,
+  internalActionGeneric,
+  internalMutationGeneric,
+  internalQueryGeneric,
+} from "convex/server";
+import type {
   ActionBuilder,
   HttpActionBuilder,
   MutationBuilder,
@@ -19,13 +28,6 @@ import {
   GenericQueryCtx,
   GenericDatabaseReader,
   GenericDatabaseWriter,
-  actionGeneric,
-  httpActionGeneric,
-  mutationGeneric,
-  queryGeneric,
-  internalActionGeneric,
-  internalMutationGeneric,
-  internalQueryGeneric,
 } from "convex/server";
 import type { DataModel } from "./dataModel.js";
 

@@ -1,7 +1,8 @@
 // convex/flow.test.ts
 // 8.1 — End-to-end access → task → submit flow tests
 import { convexTest } from "convex-test";
-import { expect, test, describe, beforeEach } from "vitest";
+import { expect, test, describe } from "vitest";
+import type { Id } from "./_generated/dataModel";
 import schema from "./schema";
 import * as sessions from "./sessions";
 import * as tasks from "./tasks";
@@ -166,9 +167,10 @@ describe("8.1 — getCurrentTask", () => {
   test("returns error for an unknown session id", async () => {
     const t = convexTest(schema, modules);
 
-    // Use a syntactically valid but non-existent ID
+    // Cast a sentinel string to the branded Id type for this error-path test
+    const unknownId = "unknown_session" as unknown as Id<"sessions">;
     const taskData = await t.query(tasks.getCurrentTask, {
-      sessionId: "10001;sessions" as any,
+      sessionId: unknownId,
     });
 
     expect(taskData).toHaveProperty("error");
